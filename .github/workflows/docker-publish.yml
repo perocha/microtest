@@ -19,11 +19,11 @@ jobs:
     - name: Build consumer image
       uses: docker/build-push-action@v2
       with:
-        context: ./consumer
+        context: ./consumer/Dockerfile
         push: false
 
     - name: Build publisher image
       uses: docker/build-push-action@v2
       with:
-        context: ./publisher
+        context: ./publisher/Dockerfile
         push: false
