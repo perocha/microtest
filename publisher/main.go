@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -29,7 +28,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 	// Publish messages
 	for i := 0; i < message.Count; i++ {		
 		// Log the event to App Insights
-		common.TrackEvent("MessagePublished", map[string]string{
+		telemetry.TrackEvent("MessagePublished", map[string]string{
 			"messageId": strconv.Itoa(i),
 			"content": message.Content,
 			"count": strconv.Itoa(message.Count),
@@ -44,7 +43,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	// Initialize telemetry
-	common.InitTelemetry()
+	telemetry.InitTelemetry()
 
 	// Create a new router
 	router := mux.NewRouter()
@@ -65,7 +64,7 @@ func main() {
 	}
 
 	// Log the event to App Insights
-	common.TrackEvent("ServerStarted", map[string]string{"port": port}, nil)
+	telemetry.TrackEvent("ServerStarted", map[string]string{"port": port}, nil)
 
-	log.Fatal(server.ListenAndServe())
+	telemetry.TrackException(server.ListenAndServe())
 }

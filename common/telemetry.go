@@ -1,4 +1,4 @@
-package common
+package telemetry
 
 import (
 	"log"
@@ -41,4 +41,14 @@ func TrackEvent(name string, properties map[string]string, measurements map[stri
 		event.Measurements[k] = v
 	}
 	client.Track(event)
+}
+
+// TrackException sends an exception to App Insights
+func TrackException(err error) {
+	if client == nil {
+		log.Printf("Exception: %s\n", err.Error())
+		return
+	}
+	
+	client.TrackException(err)
 }
