@@ -19,7 +19,7 @@ jobs:
     - name: Login to Azure Container Registry
       uses: docker/login-action@v1
       with:
-        registry: ${{secrets.ACR_NAME}}.azurecr.io
+        registry: ${{secrets.ACR_NAMESPACE}}.azurecr.io
         username: ${{secrets.ACR_USERNAME}}
         password: ${{secrets.ACR_PASSWORD}}
 
@@ -29,7 +29,7 @@ jobs:
         context: .
         file: ./consumer/Dockerfile
         push: true
-        tags: ${{secrets.ACR_NAME}}.azurecr.io/consumer:latest
+        tags: ${{secrets.ACR_NAMESPACE}}.azurecr.io/consumer:latest
 
     - name: Build publisher image
       uses: docker/build-push-action@v2
@@ -37,4 +37,4 @@ jobs:
         context: .
         file: ./publisher/Dockerfile
         push: true
-        tags: ${{secrets.ACR_NAME}}.azurecr.io/publisher:latest
+        tags: ${{secrets.ACR_NAMESPACE}}.azurecr.io/publisher:latest
