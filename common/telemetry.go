@@ -10,6 +10,7 @@ import (
 
 var client appinsights.TelemetryClient
 
+// TelemetryData is a struct to hold telemetry data
 type TelemetryData struct {
     Message     string
     Severity    contracts.SeverityLevel
@@ -71,14 +72,15 @@ func TrackException(err error) {
 	client.TrackException(err)
 }
 
+// CoolTrace sends a trace message to App Insights
 func CoolTrace(data TelemetryData) {
-    if client == nil {
-        log.Printf("Telemetry: %s, Properties: %v, Measurements: %v\n", data.Message, data.Properties, data.Measurements)
+	if client == nil {
+        log.Printf("Telemetry: %s, Properties: %v\n", data.Message, data.Properties)
         return
     }
 
-    trace := appinsights.NewTraceTelemetry(message, severity)
-    for k, v := range properties {
+    trace := appinsights.NewTraceTelemetry(data.Message, data.Severity)
+    for k, v := range data.Properties {
         trace.Properties[k] = v
     }
     client.Track(trace)
