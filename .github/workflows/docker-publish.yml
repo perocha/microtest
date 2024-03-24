@@ -20,8 +20,8 @@ jobs:
       uses: azure/docker-login@v1
       with:
         login-server: ${{secrets.ACR_NAMESPACE}}.azurecr.io
-        username: ${{secrets.AZURE_CREDENTIALS.clientId}}
-        password: ${{secrets.AZURE_CREDENTIALS.clientSecret}}
+        username: ${{secrets.ACR_USERNAME}}
+        password: ${{secrets.ACR_PASSWORD}}
 
     - name: Build consumer image
       uses: docker/build-push-action@v2
