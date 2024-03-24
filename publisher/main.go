@@ -69,9 +69,10 @@ func main() {
 		Properties: map[string]string{"port": port},
 		Severity: telemetry.Information,
 	}
-	telemetry.CoolTrace(telemetryData)
+	//telemetry.CoolTrace(telemetryData)
 
 	telemetry.TrackEvent("ServerStarted", map[string]string{"port": port}, nil)
+	telemetry.TrackTrace("Server started", telemetry.Information)
 
 	telemetry.TrackException(server.ListenAndServe())
 }
