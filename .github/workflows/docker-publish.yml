@@ -56,8 +56,8 @@ jobs:
       uses: azure/aks-set-context@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+        resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
         cluster-name: ${{ secrets.AKS_CLUSTER }}
-        namespace: ${{ secrets.AKS_NAMESPACE }}
 
     - name: Deploy to AKS
       uses: azure/k8s-deploy@v1
