@@ -17,3 +17,9 @@ spec:
         image: perocha.azurecr.io/publisher:latest
         ports:
         - containerPort: 8080
+        env:
+        - name: APPINSIGHTS_INSTRUMENTATIONKEY
+          valueFrom:
+            secretKeyRef:
+              name: appinsights
+              key: instrumentationkey
