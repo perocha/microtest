@@ -64,3 +64,4 @@ jobs:
       with:
         manifests: |
           k8s/publisher-deployment.yaml
+          k8s/publisher-service.yaml
