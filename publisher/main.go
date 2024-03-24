@@ -64,7 +64,15 @@ func main() {
 	}
 
 	// Log the event to App Insights
-	telemetry.TrackEvent("ServerStarted", map[string]string{"port": port}, nil)
+	message := "Publisher::Starting server on port " + port
+	telemetry.TrackTrace(message, common.Information)
+
+	telemetryData := telemetry.TelemetryData{
+		Name: "Publisher"
+		Message: "ServerStarted on port " + port,
+		Properties: map[string]string{"port": port},
+	}
+	telemetry.CoolTrace(telemetryData)
 
 	telemetry.TrackException(server.ListenAndServe())
 }
