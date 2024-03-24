@@ -67,8 +67,11 @@ func main() {
 	telemetryData := telemetry.TelemetryData{
 		Message: "Publisher::ServerStarted on port " + port,
 		Properties: map[string]string{"port": port},
+		Severity: telemetry.Information,
 	}
 	telemetry.CoolTrace(telemetryData)
+
+	telemetry.TrackEvent("ServerStarted", map[string]string{"port": port}, nil)
 
 	telemetry.TrackException(server.ListenAndServe())
 }

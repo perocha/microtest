@@ -18,6 +18,15 @@ type TelemetryData struct {
     Error       error
 }
 
+// Telemetry severity levels
+const (
+	Verbose     = contracts.Verbose
+	Information = contracts.Information
+	Warning     = contracts.Warning
+	Error       = contracts.Error
+	Critical    = contracts.Critical
+)
+
 func InitTelemetry() {
 	// Get the instrumentation key from environment variables
 	instrumentationKey := os.Getenv("APPINSIGHTS_INSTRUMENTATIONKEY")
