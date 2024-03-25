@@ -18,7 +18,8 @@ RUN go mod download
 
 # Copy the source code into the container
 COPY ./publisher .
-COPY ./common ./common
+COPY ./messaging ./messaging
+COPY ./telemetry ./telemetry
 
 # Build the Go app
 RUN go build -o publisher .
