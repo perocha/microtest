@@ -26,7 +26,7 @@ func main() {
 		// Received message, log the event to App Insights
 		telemetryData := telemetry.TelemetryData{
 			Message: "Received message: " + string(event.Data),
-			Properties: map[string]string{"event.Data": event.Data},
+			Properties: map[string]string{"event.Data": string(event.Data)},
 			Severity: telemetry.Information,
 		}
 		telemetry.TrackTrace(telemetryData)
