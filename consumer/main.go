@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/microtest/common"
+	"github.com/microtest/telemetry"
 	eventhub "github.com/Azure/azure-event-hubs-go"
 )
 
