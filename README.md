@@ -45,6 +45,8 @@ The telemetry is handled by package telemetry.go. I'm using App Insights to trac
 For now, the configuration is managed using environment variables:
 * telemetry: APPINSIGHTS_INSTRUMENTATIONKEY - App Insights key
 * publisher: PORT - Port that will be listening to requests
+* messaging: EVENT_HUB_NAME - Event Hubs name
+* publisher: EVENT_HUB_CONNECTION_STRING - Event Hubs connection string
 
 // TODO: move this configuration to App Config service in Azure. How to dynamically configure PORT in publisher-service?
 

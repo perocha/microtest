@@ -10,8 +10,10 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/google/uuid"
 
-	"github.com/microtest/common"
+	"github.com/microtest/telemetry"
+	"github.com/microtest/messaging"
 )
+
 
 func publishMessages(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
@@ -43,7 +45,16 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		telemetry.TrackTrace(telemetryData)
 
 		// Publish the message to event hub
-
+		err = messaging.EventHubInstance.Publish(message.Content)
+		if err != nil {
+			telemetryData := telemetry.TelemetryData{
+				Message: "Publisher::Failed to publish message: " + messageID + ")",
+				Properties: map[string]string{
+					"Error": err.Error()},
+				Severity: telemetry.Error,
+			}
+			telemetry.TrackTrace(telemetryData)
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -52,6 +63,18 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry()
+
+	// Initialize a new EventHub instance
+	eventHubConnectionString := os.Getenv("EVENT_HUB_CONNECTION_STRING")
+	err := messaging.NewEventHub(eventHubConnectionString)
+	if err != nil {
+		telemetryData := telemetry.TelemetryData{
+			Message: "Publisher::Failed to initialize EventHub",
+			Properties: map[string]string{"Error": err.Error()},
+			Severity: telemetry.Error,
+		}
+		telemetry.TrackTrace(telemetryData)
+	}
 
 	// Create a new router
 	router := mux.NewRouter()

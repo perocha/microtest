@@ -58,7 +58,7 @@ func TrackException(err error) {
 // Sends a trace message to App Insights
 func TrackTrace(data TelemetryData) {
 	if client == nil {
-        log.Printf("Telemetry: %s, Properties: %v\n", data.Message, data.Properties)
+        log.Printf("Message: %s, Properties: %v\n", data.Message, data.Properties)
         return
     }
 
