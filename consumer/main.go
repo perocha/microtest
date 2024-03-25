@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"os"
 
 	"github.com/microtest/common"
@@ -27,13 +25,13 @@ func main() {
 	handler := func(ctx context.Context, event *eventhub.Event) error {
 		// Received message, log the event to App Insights
 		telemetryData := telemetry.TelemetryData{
-			Message: "Received message: %s\n", string(event.Data),
+			Message: "Received message: " + string(event.Data),
 			Properties: map[string]string{"event.Data": event.Data},
 			Severity: telemetry.Information,
 		}
 		telemetry.TrackTrace(telemetryData)
 
-		fmt.Printf("Received message: %s\n", string(event.Data))
+		//fmt.Printf("Received message: %s\n", string(event.Data))
 		return nil
 	}
 
