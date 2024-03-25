@@ -40,39 +40,8 @@ func InitTelemetry() {
 	client = appinsights.NewTelemetryClient(instrumentationKey)
 
 	// Send a trace message to make sure it's working
-	client.TrackTrace("App Insights initialized", contracts.Information)
+	client.TrackTrace("Telemetry::App Insights initialized", contracts.Information)
 }
-
-/*
-// TrackTrace sends a trace message to App Insights
-func TrackTrace(message string, severity contracts.SeverityLevel) {
-	if client == nil {
-		log.Printf("Trace: %s\n", message)
-		return
-	}
-
-	client.TrackTrace(message, severity)
-}
-*/
-
-/*
-// TrackEvent sends an event to App Insights
-func TrackEvent(name string, properties map[string]string, measurements map[string]float64) {
-	if client == nil {
-		log.Printf("Event: %s, Properties: %v, Measurements: %v\n", name, properties, measurements)
-		return
-	}
-	
-	event := appinsights.NewEventTelemetry(name)
-	for k, v := range properties {
-		event.Properties[k] = v
-	}
-	for k, v := range measurements {
-		event.Measurements[k] = v
-	}
-	client.Track(event)
-}
-*/
 
 // TrackException sends an exception to App Insights
 func TrackException(err error) {

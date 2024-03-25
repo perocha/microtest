@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/google/uuid"
 
 	"github.com/microtest/common"
 )
@@ -27,11 +28,14 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 
 	// Publish messages
 	for i := 0; i < message.Count; i++ {
+		// Create a new UUID for the message
+		messageID := uuid.New().String()
+
 		// Log the event to App Insights
 		telemetryData := telemetry.TelemetryData{
 			Message: "Publisher::Message received, will publish message to EventHub",
 			Properties: map[string]string{
-				"messageId": strconv.Itoa(i),
+				"messageId": messageID,
 				"content":   message.Content,
 				"count":     strconv.Itoa(message.Count)},
 			Severity: telemetry.Information,
