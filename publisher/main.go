@@ -33,7 +33,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 
 		// Log the event to App Insights
 		telemetryData := telemetry.TelemetryData{
-			Message: "Publisher::Message received, will publish message to EventHub",
+			Message: "Publisher::Message received, will publish message to EventHub (messageID: " + messageID + ")",
 			Properties: map[string]string{
 				"messageId": messageID,
 				"content":   message.Content,
