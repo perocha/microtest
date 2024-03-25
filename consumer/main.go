@@ -17,7 +17,7 @@ func main() {
 	hub, err := eventhub.NewHubFromConnectionString(connectionString)
 	if err != nil {
 		telemetry.TrackException(err)
-		log.Fatalf("failed to create hub: %s\n", err)
+		// log.Fatalf("failed to create hub: %s\n", err)
 	}
 
 	// Close the hub when the program exits
@@ -25,6 +25,14 @@ func main() {
 
 	// Register a handler for incoming messages
 	handler := func(ctx context.Context, event *eventhub.Event) error {
+		// Received message, log the event to App Insights
+		telemetryData := telemetry.TelemetryData{
+			Message: "Received message: %s\n", string(event.Data),
+			Properties: map[string]string{"event.Data": event.Data},
+			Severity: telemetry.Information,
+		}
+		telemetry.TrackTrace(telemetryData)
+
 		fmt.Printf("Received message: %s\n", string(event.Data))
 		return nil
 	}
@@ -37,7 +45,8 @@ func main() {
 		eventhub.ReceiveWithLatestOffset(), // this is an example of a ReceiveOption you can use
 	)
 	if err != nil {
-		log.Fatalf("failed to start receiving: %s\n", err)
+		// log.Fatalf("failed to start receiving: %s\n", err)
+		telemetry.TrackException(err)
 	}
 
 	// Wait indefinitely

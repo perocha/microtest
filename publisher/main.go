@@ -26,13 +26,17 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Publish messages
-	for i := 0; i < message.Count; i++ {		
+	for i := 0; i < message.Count; i++ {
 		// Log the event to App Insights
-		telemetry.TrackEvent("MessagePublished", map[string]string{
-			"messageId": strconv.Itoa(i),
-			"content": message.Content,
-			"count": strconv.Itoa(message.Count),
-			}, nil)
+		telemetryData := telemetry.TelemetryData{
+			Message: "Publisher::Message received, will publish message to EventHub",
+			Properties: map[string]string{
+				"messageId": strconv.Itoa(i),
+				"content":   message.Content,
+				"count":     strconv.Itoa(message.Count)},
+			Severity: telemetry.Information,
+		}
+		telemetry.TrackTrace(telemetryData)
 
 		// Publish the message to event hub
 
@@ -69,10 +73,7 @@ func main() {
 		Properties: map[string]string{"port": port},
 		Severity: telemetry.Information,
 	}
-	telemetry.CoolTrace(telemetryData)
-
-//	telemetry.TrackEvent("ServerStarted", map[string]string{"port": port}, nil)
-//	telemetry.TrackTrace("Server started", telemetry.Information)
+	telemetry.TrackTrace(telemetryData)
 
 	telemetry.TrackException(server.ListenAndServe())
 }

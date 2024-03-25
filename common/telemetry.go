@@ -43,6 +43,7 @@ func InitTelemetry() {
 	client.TrackTrace("App Insights initialized", contracts.Information)
 }
 
+/*
 // TrackTrace sends a trace message to App Insights
 func TrackTrace(message string, severity contracts.SeverityLevel) {
 	if client == nil {
@@ -52,8 +53,9 @@ func TrackTrace(message string, severity contracts.SeverityLevel) {
 
 	client.TrackTrace(message, severity)
 }
+*/
 
-
+/*
 // TrackEvent sends an event to App Insights
 func TrackEvent(name string, properties map[string]string, measurements map[string]float64) {
 	if client == nil {
@@ -70,6 +72,7 @@ func TrackEvent(name string, properties map[string]string, measurements map[stri
 	}
 	client.Track(event)
 }
+*/
 
 // TrackException sends an exception to App Insights
 func TrackException(err error) {
@@ -77,12 +80,14 @@ func TrackException(err error) {
 		log.Printf("Exception: %s\n", err.Error())
 		return
 	}
-	
+
+	// TODO: How to write a Message in the Exception??
+
 	client.TrackException(err)
 }
 
-// CoolTrace sends a trace message to App Insights
-func CoolTrace(data TelemetryData) {
+// Sends a trace message to App Insights
+func TrackTrace(data TelemetryData) {
 	if client == nil {
         log.Printf("Telemetry: %s, Properties: %v\n", data.Message, data.Properties)
         return
