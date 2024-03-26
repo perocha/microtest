@@ -48,5 +48,23 @@ For now, the configuration is managed using environment variables:
 * messaging: EVENT_HUB_NAME - Event Hubs name
 * publisher: EVENT_HUB_CONNECTION_STRING - Event Hubs connection string
 
+    In k8s deployment file, the environment variables are set:
+
+```yaml
+        env:
+        - name: EVENT_HUB_CONNECTION_STRING
+            valueFrom:
+            secretKeyRef:
+                name: eventhub
+                key: eventhubconnectionstring
+```
+
+    And then, the secret needs to be created in the AKS cluster:
+
+```bash
+kubectl create secret generic eventhub --from-literal=eventhubconnectionstring="Endpoint=sb://<yournamespace>.servicebus.windows.net/;SharedAccessKeyName=<yourkeyname>;SharedAccessKey=<yourkey>;EntityPath=<yourentitypath>"
+```
+
+// TODO: Currently these environment variables are set in K8S deployment file (publisher-deployment.yaml). This is not ideal and should be managed in a more dynamic way.
 // TODO: move this configuration to App Config service in Azure. How to dynamically configure PORT in publisher-service?
 
