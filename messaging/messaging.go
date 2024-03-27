@@ -58,7 +58,7 @@ func (e *EventHub) Publish(message string, messageID string) error {
 	if err != nil {
 		// Failed to send message, log dependency failure to App Insights
 		telemetryData := telemetry.TelemetryData{
-			Message: "Messaging::Publish::Failed to send message",
+			Message: "Messaging::Publish::Failed to send message to EventHub",
 			Properties: map[string]string{
 				"Error": err.Error(),
 				"messageId": messageID,
@@ -72,7 +72,7 @@ func (e *EventHub) Publish(message string, messageID string) error {
 	} else {
 		// Successfully sent message, log to App Insights
 		telemetryData := telemetry.TelemetryData{
-			Message: "Messaging::Publish::Message sent",
+			Message: "Messaging::Publish::Message sent to EventHub",
 			Properties: map[string]string{
 				"messageId": messageID,
 			},
@@ -114,7 +114,7 @@ func (e *EventHub) Subscribe(handler func(string)) error {
 	if err != nil {
 		// Failed to receive message, log dependency failure to App Insights
 		telemetryData := telemetry.TelemetryData{
-			Message: "Messaging::Subscribe::Failed to receive message",
+			Message: "Messaging::Subscribe::Failed to receive message from EventHub",
 			Properties: map[string]string{"Error": err.Error()},
 			DependencyType: "EventHub",
 			DependencySuccess: false,
