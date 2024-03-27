@@ -50,7 +50,7 @@ func (e *EventHub) Publish(message string) error {
 			DependencyType: "EventHub",
 			DependencySuccess: false,
 			StartTime: startTime,
-			EndTime: time.Now()
+			EndTime: time.Now(),
 			}
 		telemetry.TrackDependency(telemetryData)
 	} else {
@@ -60,7 +60,7 @@ func (e *EventHub) Publish(message string) error {
 			DependencyType: "EventHub",
 			DependencySuccess: true,
 			StartTime: startTime,
-			EndTime: time.Now()
+			EndTime: time.Now(),
 		}
 
 		telemetry.TrackDependency(telemetryData)
