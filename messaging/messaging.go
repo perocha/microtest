@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 	"strconv"
+	"log"
 
 	"github.com/Azure/azure-event-hubs-go"
 	"github.com/microtest/telemetry"
