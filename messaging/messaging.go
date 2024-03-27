@@ -16,6 +16,9 @@ type EventHub struct {
 
 // NewEventHub initializes a new EventHub instance
 func NewEventHub(connectionString string) error {
+	startTime := time.Now()
+
+	// Create a new EventHub instance
 	hub, err := eventhub.NewHubFromConnectionString(connectionString)
 	if err != nil {
 		telemetry.TrackException(err)
@@ -28,6 +31,8 @@ func NewEventHub(connectionString string) error {
 		Message: "Messaging::EventHub initialized",
 		DependencyType: "EventHub",
 		DependencySuccess: true,
+		StartTime: startTime,
+		EndTime: time.Now(),
 	}
 	telemetry.TrackDependency(telemetryData)
 
@@ -38,13 +43,13 @@ func NewEventHub(connectionString string) error {
 func (e *EventHub) Publish(message string) error {
 	startTime := time.Now()
 
-	ctx := context.Background() // Create a new context here
-
+	// Create a new context for the message and send it
+	ctx := context.Background()
 	event := eventhub.NewEventFromString(message)
 	err := e.Hub.Send(ctx, event)
 
 	if err != nil {
-		// Failed to send message
+		// Failed to send message, log dependency failure to App Insights
 		telemetryData := telemetry.TelemetryData{
 			Message: "Messaging::Failed to send message",
 			Properties: map[string]string{"Error": err.Error()},
