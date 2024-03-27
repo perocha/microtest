@@ -51,7 +51,7 @@ func main() {
 	}
 
 	// Start consuming messages
-//	consumeMessages()
+	consumeMessages()
 
 	// Keep the service running
 	for {
