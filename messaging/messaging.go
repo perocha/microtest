@@ -2,8 +2,9 @@ package messaging
 
 import (
 	"context"
-	"github.com/Azure/azure-event-hubs-go"
+	"time"
 
+	"github.com/Azure/azure-event-hubs-go"
 	"github.com/microtest/telemetry"
 )
 
