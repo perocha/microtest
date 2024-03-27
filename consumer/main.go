@@ -1,52 +1,54 @@
 package main
 
 import (
-	"context"
 	"os"
 
 	"github.com/microtest/telemetry"
-	eventhub "github.com/Azure/azure-event-hubs-go"
+	"github.com/microtest/messaging"
 )
 
-func main() {
-	// Get the connection string from environment variables
-	connectionString := os.Getenv("EVENTHUB_CONNECTION_STRING")
-
-	hub, err := eventhub.NewHubFromConnectionString(connectionString)
-	if err != nil {
-		telemetry.TrackException(err)
-		// log.Fatalf("failed to create hub: %s\n", err)
-	}
-
-	// Close the hub when the program exits
-	defer hub.Close(context.Background())
-
-	// Register a handler for incoming messages
-	handler := func(ctx context.Context, event *eventhub.Event) error {
-		// Received message, log the event to App Insights
+func consumeMessages() {
+	// Subscribe to the event hub
+	err := messaging.EventHubInstance.Subscribe(func(message string) {
+		// Log the event to App Insights
 		telemetryData := telemetry.TelemetryData{
-			Message: "Received message: " + string(event.Data),
-			Properties: map[string]string{"event.Data": string(event.Data)},
+			Message: "Consumer::Message received from EventHub",
+			Properties: map[string]string{
+				"content": message,
+			},
 			Severity: telemetry.Information,
 		}
 		telemetry.TrackTrace(telemetryData)
+	})
 
-		//fmt.Printf("Received message: %s\n", string(event.Data))
-		return nil
-	}
-
-	// Start receiving messages
-	_, err = hub.Receive(
-		context.Background(), 
-		"<partition-id>", // replace with your partition ID or use a partition receiver
-		handler,
-		eventhub.ReceiveWithLatestOffset(), // this is an example of a ReceiveOption you can use
-	)
 	if err != nil {
-		// log.Fatalf("failed to start receiving: %s\n", err)
-		telemetry.TrackException(err)
+		telemetryData := telemetry.TelemetryData{
+			Message: "Consumer::Failed to subscribe to EventHub",
+			Properties: map[string]string{
+				"Error": err.Error(),
+			},
+			Severity: telemetry.Error,
+		}
+		telemetry.TrackTrace(telemetryData)
+	}
+}
+
+func main() {
+	// Initialize telemetry
+	telemetry.InitTelemetry()
+
+	// Initialize a new EventHub instance
+	eventHubConnectionString := os.Getenv("EVENT_HUB_CONNECTION_STRING")
+	err := messaging.NewEventHub(eventHubConnectionString)
+	if err != nil {
+		telemetryData := telemetry.TelemetryData{
+			Message: "Consumer::Failed to initialize EventHub",
+			Properties: map[string]string{"Error": err.Error()},
+			Severity: telemetry.Error,
+		}
+		telemetry.TrackTrace(telemetryData)
 	}
 
-	// Wait indefinitely
-	select {}
+	// Start consuming messages
+	consumeMessages()
 }
