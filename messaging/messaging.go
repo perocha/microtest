@@ -25,7 +25,8 @@ func NewEventHub(connectionString string) error {
 	// Log the event to App Insights
 	telemetryData := telemetry.TelemetryData{
 		Message: "Messaging::EventHub initialized",
-		Severity: telemetry.Information,
+		DependencyType: "EventHub",
+		DependencySuccess: true,
 	}
 	telemetry.TrackDependency(telemetryData)
 
@@ -44,15 +45,16 @@ func (e *EventHub) Publish(message string) error {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Messaging::Failed to send message",
 			Properties: map[string]string{"Error": err.Error()},
-			Severity: telemetry.Error,
+			DependencyType: "EventHub",
+			DependencySuccess: false,
 		}
 		telemetry.TrackDependency(telemetryData)
 	} else {
 		// Successfully sent message, log to App Insights
 		telemetryData := telemetry.TelemetryData{
 			Message: "Messaging::Message sent",
-			Properties: map[string]string{"Message": message},
-			Severity: telemetry.Information,
+			DependencyType: "EventHub",
+			DependencySuccess: true,
 		}
 		telemetry.TrackDependency(telemetryData)
 	}

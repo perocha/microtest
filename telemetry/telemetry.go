@@ -16,6 +16,9 @@ type TelemetryData struct {
     Severity    contracts.SeverityLevel
     Properties  map[string]string
     Error       error
+	DependencyType string
+	DependencyData string
+	DependencySuccess bool
 }
 
 // Telemetry severity levels
@@ -72,11 +75,11 @@ func TrackTrace(data TelemetryData) {
 // Track a dependency to App Insights
 func TrackDependency(data TelemetryData) {
 	if client == nil {
-		log.Printf("Dependency: %s, Properties: %v\n", data.Message, data.Properties)
+		log.Printf("Dependency: %s, Data: %s, Message: %s, Success: %t\n", data.DependencyType, data.DependencyData, data.Message, data.DependencySuccess)		
 		return
 	}
 
-	dependency := appinsights.NewRemoteDependencyTelemetry(data.Message, "", data.Severity)
+	dependency := appinsights.NewRemoteDependencyTelemetry(data.DependencyType, data.DependencyData, data.Message, data.DependencySuccess)
 	for k, v := range data.Properties {
 		dependency.Properties[k] = v
 	}
