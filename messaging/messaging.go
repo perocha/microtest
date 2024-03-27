@@ -74,3 +74,41 @@ func (e *EventHub) Publish(message string) error {
 
 	return err
 }
+
+// Subscribe listens for messages on the EventHub
+func (e *EventHub) Subscribe(handler func(string)) error {
+	startTime := time.Now()
+
+	// Create a new context for the message and receive it
+	ctx := context.Background()
+	err := e.Hub.Receive(ctx, func(event *eventhub.Event) error {
+		handler(event.Data)
+		return nil
+	})
+
+	if err != nil {
+		// Failed to receive message, log dependency failure to App Insights
+		telemetryData := telemetry.TelemetryData{
+			Message: "Messaging::Failed to receive message",
+			Properties: map[string]string{"Error": err.Error()},
+			DependencyType: "EventHub",
+			DependencySuccess: false,
+			StartTime: startTime,
+			EndTime: time.Now(),
+		}
+		telemetry.TrackDependency(telemetryData)
+	} else {
+		// Successfully received message, log to App Insights
+		telemetryData := telemetry.TelemetryData{
+			Message: "Messaging::Message received",
+			DependencyType: "EventHub",
+			DependencySuccess: true,
+			StartTime: startTime,
+			EndTime: time.Now(),
+		}
+
+		telemetry.TrackDependency(telemetryData)
+	}
+
+	return err
+}
