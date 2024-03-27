@@ -66,7 +66,7 @@ func main() {
 
 	// Initialize a new EventHub instance
 	eventHubConnectionString := os.Getenv("EVENT_HUB_CONNECTION_STRING")
-	err := messaging.NewEventHub(eventHubConnectionString)
+	err := messaging.NewEventHub("Publisher", eventHubConnectionString)
 	if err != nil {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Publisher::Failed to initialize EventHub",
