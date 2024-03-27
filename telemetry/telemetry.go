@@ -3,6 +3,7 @@ package telemetry
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/microsoft/ApplicationInsights-Go/appinsights"
 	"github.com/microsoft/ApplicationInsights-Go/appinsights/contracts"
