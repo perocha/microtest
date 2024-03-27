@@ -11,6 +11,8 @@ import (
 
 // Method consumeMessages subscribes to the event hub and consumes messages
 func consumeMessages() {
+	log.Println("consumer::subscribing to EventHub")
+
 	// Subscribe to the event hub
 	err := messaging.EventHubInstance.Subscribe(func(message string) {
 		// Log to console (not app insights)
