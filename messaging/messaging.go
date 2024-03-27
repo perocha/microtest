@@ -81,8 +81,8 @@ func (e *EventHub) Subscribe(handler func(string)) error {
 
 	// Create a new context for the message and receive it
 	ctx := context.Background()
-	err := e.Hub.Receive(ctx, func(event *eventhub.Event) error {
-		handler(event.Data)
+	_, err := e.Hub.Receive(ctx, "$Default", func(ctx context.Context, event *eventhub.Event) error {
+		handler(string(event.Data))
 		return nil
 	})
 
