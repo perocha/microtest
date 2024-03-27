@@ -50,5 +50,5 @@ func main() {
 	}
 
 	// Start consuming messages
-	consumeMessages()
+//	consumeMessages()
 }
