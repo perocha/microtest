@@ -49,8 +49,8 @@ func (e *EventHub) Publish(message string) error {
 			Properties: map[string]string{"Error": err.Error()},
 			DependencyType: "EventHub",
 			DependencySuccess: false,
-			startTime = startTime,
-			endTime = time.Now()
+			StartTime: startTime,
+			EndTime: time.Now()
 			}
 		telemetry.TrackDependency(telemetryData)
 	} else {
@@ -59,8 +59,8 @@ func (e *EventHub) Publish(message string) error {
 			Message: "Messaging::Message sent",
 			DependencyType: "EventHub",
 			DependencySuccess: true,
-			startTime = startTime,
-			endTime = time.Now()
+			StartTime: startTime,
+			EndTime: time.Now()
 		}
 
 		telemetry.TrackDependency(telemetryData)
