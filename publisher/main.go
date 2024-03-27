@@ -62,7 +62,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	// Initialize telemetry
-	telemetry.InitTelemetry()
+	telemetry.InitTelemetry("Publisher")
 
 	// Initialize a new EventHub instance
 	eventHubConnectionString := os.Getenv("EVENT_HUB_CONNECTION_STRING")

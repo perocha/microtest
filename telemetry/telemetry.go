@@ -33,7 +33,7 @@ const (
 	Critical    = contracts.Critical
 )
 
-func InitTelemetry() {
+func InitTelemetry(serviceName string) {
 	// Get the instrumentation key from environment variables
 	instrumentationKey := os.Getenv("APPINSIGHTS_INSTRUMENTATIONKEY")
 
@@ -46,7 +46,7 @@ func InitTelemetry() {
 	client = appinsights.NewTelemetryClient(instrumentationKey)
 
 	// Send a trace message to make sure it's working
-	client.TrackTrace("Telemetry::App Insights initialized", contracts.Information)
+	client.TrackTrace("Telemetry::App Insights initialized by " + serviceName, contracts.Information)
 }
 
 // TrackException sends an exception to App Insights

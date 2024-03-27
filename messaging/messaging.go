@@ -15,7 +15,7 @@ type EventHub struct {
 }
 
 // NewEventHub initializes a new EventHub instance
-func NewEventHub(connectionString string) error {
+func NewEventHub(serviceName string, connectionString string) error {
 	startTime := time.Now()
 
 	// Create a new EventHub instance
@@ -28,7 +28,7 @@ func NewEventHub(connectionString string) error {
 
 	// Log the event to App Insights
 	telemetryData := telemetry.TelemetryData{
-		Message: "Messaging::EventHub initialized",
+		Message: "Messaging::EventHub initialized by " + serviceName,
 		DependencyType: "EventHub",
 		DependencySuccess: true,
 		StartTime: startTime,
