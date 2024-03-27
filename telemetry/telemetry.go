@@ -19,8 +19,8 @@ type TelemetryData struct {
 	DependencyType string
 	DependencyData string
 	DependencySuccess bool
-	startTime   int64
-	endTime     int64
+	StartTime   time.Time
+	EndTime     time.Time
 }
 
 // Telemetry severity levels
@@ -82,7 +82,7 @@ func TrackDependency(data TelemetryData) {
 	}
 
 	dependency := appinsights.NewRemoteDependencyTelemetry(data.DependencyType, data.DependencyData, data.Message, data.DependencySuccess)
-	dependency.MarkTime(data.startTime, data.endTime)
+	dependency.MarkTime(data.StartTime, data.EndTime)
 	for k, v := range data.Properties {
 		dependency.Properties[k] = v
 	}
