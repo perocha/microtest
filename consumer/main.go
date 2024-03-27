@@ -8,6 +8,7 @@ import (
 	"github.com/microtest/messaging"
 )
 
+// Method consumeMessages subscribes to the event hub and consumes messages
 func consumeMessages() {
 	// Subscribe to the event hub
 	err := messaging.EventHubInstance.Subscribe(func(message string) {

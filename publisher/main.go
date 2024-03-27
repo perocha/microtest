@@ -14,7 +14,7 @@ import (
 	"github.com/microtest/messaging"
 )
 
-
+// Method publishMessages publishes messages to the event hub
 func publishMessages(w http.ResponseWriter, r *http.Request) {
 	// Parse request body
 	type Message struct {
@@ -45,7 +45,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		telemetry.TrackTrace(telemetryData)
 
 		// Publish the message to event hub
-		err = messaging.EventHubInstance.Publish(message.Content)
+		err = messaging.EventHubInstance.Publish(message.Content, messageID)
 		if err != nil {
 			telemetryData := telemetry.TelemetryData{
 				Message: "Publisher::Failed to publish message: " + messageID + ")",
