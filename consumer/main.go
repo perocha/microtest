@@ -51,4 +51,9 @@ func main() {
 
 	// Start consuming messages
 //	consumeMessages()
+
+	// Keep the service running
+	for {
+		time.Sleep(time.Second)
+	}
 }
