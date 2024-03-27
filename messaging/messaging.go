@@ -91,11 +91,15 @@ func (e *EventHub) Publish(message string, messageID string) error {
 func (e *EventHub) Subscribe(handler func(string)) error {
 	startTime := time.Now()
 
+	log.Println("messaging::consumer::subscribing to EventHub")
+
 	// Create a new context for the message and receive it
 	ctx := context.Background()
 	_, err := e.Hub.Receive(ctx, "$Default", func(ctx context.Context, event *eventhub.Event) error {
 		message := string(event.Data)
 		handler(message)
+
+		log.Println("messaging::consumer::message received: " + message)
 
 		// Log the event to App Insights
 		telemetryData := telemetry.TelemetryData{
@@ -112,6 +116,8 @@ func (e *EventHub) Subscribe(handler func(string)) error {
 	})
 
 	if err != nil {
+		log.Println("messaging::consumer::failed to subscribe to EventHub: " + err.Error())
+
 		// Failed to receive message, log dependency failure to App Insights
 		telemetryData := telemetry.TelemetryData{
 			Message: "Messaging::Subscribe::Failed to receive message from EventHub",
