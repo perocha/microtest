@@ -68,3 +68,17 @@ func TrackTrace(data TelemetryData) {
     }
     client.Track(trace)
 }
+
+// Track a dependency to App Insights
+func TrackDependency(data TelemetryData) {
+	if client == nil {
+		log.Printf("Dependency: %s, Properties: %v\n", data.Message, data.Properties)
+		return
+	}
+
+	dependency := appinsights.NewRemoteDependencyTelemetry(data.Message, "", data.Severity)
+	for k, v := range data.Properties {
+		dependency.Properties[k] = v
+	}
+	client.Track(dependency)
+}
