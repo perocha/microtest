@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/microtest/telemetry"
 	"github.com/microtest/messaging"
