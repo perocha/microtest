@@ -11,7 +11,7 @@ import (
 // Method consumeMessages subscribes to the event hub and consumes messages
 func consumeMessages() {
 	// Subscribe to the event hub
-	err := messaging.EventHubInstance.Subscribe(func(msg messaging.Message) {
+	err := messaging.EventHubInstance.Subscribe("Consumer", func(msg messaging.Message) {
 		// Log the event to App Insights
 		telemetryData := telemetry.TelemetryData{
 			Message: "Consumer::Message received from EventHub",

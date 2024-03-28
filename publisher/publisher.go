@@ -52,7 +52,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		telemetry.TrackTrace(telemetryData)
 
 		// Publish the message to event hub
-		err = messaging.EventHubInstance.Publish(msg)
+		err = messaging.EventHubInstance.Publish("Publisher", msg)
 		if err != nil {
 			telemetryData := telemetry.TelemetryData{
 				Message: "Publisher::Failed to publish message: " + messageID + ")",

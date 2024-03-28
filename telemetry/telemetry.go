@@ -14,11 +14,14 @@ var client appinsights.TelemetryClient
 // TelemetryData is a struct to hold telemetry data
 type TelemetryData struct {
 	Message           string
+	Id                string // Id to correlate telemetry data
 	Severity          contracts.SeverityLevel
 	Properties        map[string]string
 	Error             error
+	DependencyName    string // Name of the command that initiated this dependency call
 	DependencyType    string
 	DependencyData    string
+	DependencyTarget  string
 	DependencySuccess bool
 	StartTime         time.Time
 	EndTime           time.Time
@@ -33,6 +36,7 @@ const (
 	Critical    = contracts.Critical
 )
 
+// InitTelemetry initializes App Insights
 func InitTelemetry(serviceName string) {
 	// Get the instrumentation key from environment variables
 	instrumentationKey := os.Getenv("APPINSIGHTS_INSTRUMENTATIONKEY")

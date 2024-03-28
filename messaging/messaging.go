@@ -48,7 +48,7 @@ func NewEventHub(serviceName string, connectionString string) error {
 }
 
 // Publish sends a message to the EventHub
-func (e *EventHub) Publish(msg Message) error {
+func (e *EventHub) Publish(serviceName string, msg Message) error {
 	startTime := time.Now()
 
 	// Create a new context for the message
@@ -61,6 +61,7 @@ func (e *EventHub) Publish(msg Message) error {
 		telemetryData := telemetry.TelemetryData{
 			Message:           "Messaging::Publish::Failed to marshal message",
 			Properties:        map[string]string{"Error": err.Error()},
+			DependencyName:    serviceName,
 			DependencyType:    "EventHub",
 			DependencySuccess: false,
 			StartTime:         startTime,
@@ -84,6 +85,8 @@ func (e *EventHub) Publish(msg Message) error {
 				"Error":     err.Error(),
 				"messageId": msg.MessageId,
 			},
+			Id:                msg.MessageId,
+			DependencyName:    serviceName,
 			DependencyType:    "EventHub",
 			DependencySuccess: false,
 			StartTime:         startTime,
@@ -97,6 +100,8 @@ func (e *EventHub) Publish(msg Message) error {
 			Properties: map[string]string{
 				"messageId": msg.MessageId,
 			},
+			Id:                msg.MessageId,
+			DependencyName:    serviceName,
 			DependencyType:    "EventHub",
 			DependencySuccess: true,
 			StartTime:         startTime,
@@ -109,7 +114,7 @@ func (e *EventHub) Publish(msg Message) error {
 }
 
 // Subscribe listens for messages on the EventHub
-func (e *EventHub) Subscribe(handler func(Message)) error {
+func (e *EventHub) Subscribe(serviceName string, handler func(Message)) error {
 	startTime := time.Now()
 
 	// Create a new context for the message and receive it
@@ -122,8 +127,11 @@ func (e *EventHub) Subscribe(handler func(Message)) error {
 		if err != nil {
 			// Failed to unmarshal message, log dependency failure to App Insights
 			telemetryData := telemetry.TelemetryData{
-				Message:           "Messaging::Subscribe::Failed to unmarshal message",
-				Properties:        map[string]string{"Error": err.Error()},
+				Message: "Messaging::Subscribe::Failed to unmarshal message",
+				Properties: map[string]string{
+					"Error": err.Error(),
+				},
+				DependencyName:    serviceName,
 				DependencyType:    "EventHub",
 				DependencySuccess: false,
 				StartTime:         startTime,
@@ -144,6 +152,8 @@ func (e *EventHub) Subscribe(handler func(Message)) error {
 				"msg":       string(event.Data),
 				"size":      strconv.Itoa(len(event.Data)), // size of the message in bytes
 			},
+			Id:                msg.MessageId,
+			DependencyName:    serviceName,
 			DependencyType:    "EventHub",
 			DependencySuccess: true,
 			StartTime:         startTime,
@@ -159,6 +169,7 @@ func (e *EventHub) Subscribe(handler func(Message)) error {
 		telemetryData := telemetry.TelemetryData{
 			Message:           "Messaging::Subscribe::Failed to receive message from EventHub",
 			Properties:        map[string]string{"Error": err.Error()},
+			DependencyName:    serviceName,
 			DependencyType:    "EventHub",
 			DependencySuccess: false,
 			StartTime:         startTime,
