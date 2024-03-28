@@ -11,8 +11,10 @@ import (
 	"github.com/microtest/telemetry"
 )
 
+// EventHubInstance is a global instance of the EventHub
 var EventHubInstance *EventHub
 
+// EventHub represents the structure of an EventHub
 type EventHub struct {
 	Hub          *eventhub.Hub
 	EventHubName string
@@ -36,20 +38,8 @@ func NewEventHub(serviceName string, connectionString string) error {
 	}
 	EventHubInstance = &EventHub{Hub: hub, EventHubName: getEventHubName(connectionString)}
 
-	/*
-		// Log the event to App Insights
-		telemetryData := telemetry.TelemetryData{
-			Message:           "Messaging::EventHub initialized by " + serviceName,
-			DependencyType:    "EventHub",
-			DependencyTarget:  EventHubInstance.EventHubName,
-			DependencySuccess: true,
-			StartTime:         startTime,
-			EndTime:           time.Now(),
-		}
-		telemetry.TrackDependency(telemetryData)
-	*/
-	telemetry.TrackDependencyTest(serviceName, "EventHub", EventHubInstance.EventHubName, true, startTime, time.Now(), nil)
-	// func TrackDependencyTest(dependencyName string, dependencyType string, dependencyTarget string, dependencySuccess bool, startTime time.Time, endTime time.Time) {
+	// Log the dependency to App Insights (success)
+	telemetry.TrackDependency(serviceName, "EventHub", EventHubInstance.EventHubName, true, startTime, time.Now(), nil)
 
 	return nil
 }
@@ -64,21 +54,8 @@ func (e *EventHub) Publish(serviceName string, msg Message) error {
 	// Convert the message to JSON
 	jsonData, err := json.Marshal(msg)
 	if err != nil {
-		/*
-			// Failed to marshal message, log dependency failure to App Insights
-			telemetryData := telemetry.TelemetryData{
-				Message:           "Messaging::Publish::Failed to marshal message",
-				Properties:        map[string]string{"Error": err.Error()},
-				DependencyName:    serviceName,
-				DependencyTarget:  e.EventHubName,
-				DependencyType:    "EventHub",
-				DependencySuccess: false,
-				StartTime:         startTime,
-				EndTime:           time.Now(),
-			}
-			telemetry.TrackDependency(telemetryData)
-		*/
-		telemetry.TrackDependencyTest(serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()})
+		// Failed to marshal message, log dependency failure to App Insights
+		telemetry.TrackDependency(serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()})
 		return err
 	}
 
@@ -90,43 +67,10 @@ func (e *EventHub) Publish(serviceName string, msg Message) error {
 
 	if errHub != nil {
 		// Failed to send message, log dependency failure to App Insights
-		/*
-			telemetryData := telemetry.TelemetryData{
-				Message: "Messaging::Publish::Failed to send message to EventHub",
-				Properties: map[string]string{
-					"Error":     err.Error(),
-					"messageId": msg.MessageId,
-				},
-				Id:                msg.MessageId,
-				DependencyName:    serviceName,
-				DependencyType:    "EventHub",
-				DependencyTarget:  e.EventHubName,
-				DependencySuccess: false,
-				StartTime:         startTime,
-				EndTime:           time.Now(),
-			}
-			telemetry.TrackDependency(telemetryData)
-		*/
-		telemetry.TrackDependencyTest(serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": errHub.Error(), "messageId": msg.MessageId})
+		telemetry.TrackDependency(serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": errHub.Error(), "messageId": msg.MessageId})
 	} else {
 		// Successfully sent message, log to App Insights
-		/*
-			telemetryData := telemetry.TelemetryData{
-				Message: "Messaging::Publish::Message sent to EventHub",
-				Properties: map[string]string{
-					"messageId": msg.MessageId,
-				},
-				Id:                msg.MessageId,
-				DependencyName:    serviceName,
-				DependencyType:    "EventHub",
-				DependencyTarget:  e.EventHubName,
-				DependencySuccess: true,
-				StartTime:         startTime,
-				EndTime:           time.Now(),
-			}
-			telemetry.TrackDependency(telemetryData)
-		*/
-		telemetry.TrackDependencyTest(serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"messageId": msg.MessageId})
+		telemetry.TrackDependency(serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"messageId": msg.MessageId})
 	}
 
 	return errHub
@@ -145,68 +89,21 @@ func (e *EventHub) Subscribe(serviceName string, handler func(Message)) error {
 		err := json.Unmarshal(event.Data, &msg)
 		if err != nil {
 			// Failed to unmarshal message, log dependency failure to App Insights
-			/*
-				telemetryData := telemetry.TelemetryData{
-					Message: "Messaging::Subscribe::Failed to unmarshal message",
-					Properties: map[string]string{
-						"Error": err.Error(),
-					},
-					DependencyName:    serviceName,
-					DependencyType:    "EventHub",
-					DependencyTarget:  e.EventHubName,
-					DependencySuccess: false,
-					StartTime:         startTime,
-					EndTime:           time.Now(),
-				}
-				telemetry.TrackDependency(telemetryData)
-			*/
-			telemetry.TrackDependencyTest(serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()})
+			telemetry.TrackDependency(serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()})
 			return nil
 		}
 
 		handler(msg)
 
 		// Log the event to App Insights
-		/*
-			telemetryData := telemetry.TelemetryData{
-				Message: "Messaging::Subscribe::Message received from EventHub",
-				Properties: map[string]string{
-					"content":   msg.Payload,
-					"messageId": msg.MessageId,
-					"msg":       string(event.Data),
-					"size":      strconv.Itoa(len(event.Data)), // size of the message in bytes
-				},
-				Id:                msg.MessageId,
-				DependencyName:    serviceName,
-				DependencyType:    "EventHub",
-				DependencyTarget:  e.EventHubName,
-				DependencySuccess: true,
-				StartTime:         startTime,
-				EndTime:           time.Now(),
-			}
-			telemetry.TrackDependency(telemetryData)
-		*/
-		telemetry.TrackDependencyTest(serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))})
+		telemetry.TrackDependency(serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))})
 
 		return nil
 	})
 
 	if err != nil {
 		// Failed to receive message
-		/*
-			telemetryData := telemetry.TelemetryData{
-				Message:           "Messaging::Subscribe::Failed to receive message from EventHub",
-				Properties:        map[string]string{"Error": err.Error()},
-				DependencyName:    serviceName,
-				DependencyType:    "EventHub",
-				DependencyTarget:  e.EventHubName,
-				DependencySuccess: false,
-				StartTime:         startTime,
-				EndTime:           time.Now(),
-			}
-			telemetry.TrackDependency(telemetryData)
-		*/
-		telemetry.TrackDependencyTest(serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()})
+		telemetry.TrackDependency(serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()})
 	}
 
 	return err

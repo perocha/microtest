@@ -82,7 +82,7 @@ func TrackTrace(data TelemetryData) {
 }
 
 // Track a dependency to App Insights
-func TrackDependency(data TelemetryData) {
+func TrackDependencyBase(data TelemetryData) {
 	if client == nil {
 		log.Printf(("DependencyName: %s, DependencyType: %s, DependencyTarget: %s, DependencySuccess: %t, StartTime: %s, EndTime: %s\n"), data.DependencyName, data.DependencyType, data.DependencyTarget, data.DependencySuccess, data.StartTime, data.EndTime)
 		return
@@ -97,7 +97,7 @@ func TrackDependency(data TelemetryData) {
 }
 
 // Helper function to generate a TrackDependency
-func TrackDependencyTest(
+func TrackDependency(
 	dependencyName string,
 	dependencyType string,
 	dependencyTarget string,
@@ -116,5 +116,5 @@ func TrackDependencyTest(
 		EndTime:           endTime,
 	}
 
-	TrackDependency(telemetryData)
+	TrackDependencyBase(telemetryData)
 }
