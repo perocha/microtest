@@ -13,6 +13,8 @@ var client appinsights.TelemetryClient
 
 type RequestTelemetryData = appinsights.RequestTelemetry
 
+type RemoteDependencyTelemetryData = appinsights.RemoteDependencyTelemetry
+
 // TelemetryData is a struct to hold telemetry data
 type TelemetryData struct {
 	Message           string
@@ -99,14 +101,14 @@ func TrackRequest(data RequestTelemetryData) {
 }
 
 // Track a dependency to App Insights
-func TrackDependencyBase(data TelemetryData) {
+func TrackDependencyBase(data RemoteDependencyTelemetryData, StartTime time.Time, EndTime time.Time) {
 	if client == nil {
-		log.Printf(("DependencyName: %s, DependencyType: %s, DependencyTarget: %s, DependencySuccess: %t, StartTime: %s, EndTime: %s\n"), data.DependencyName, data.DependencyType, data.DependencyTarget, data.DependencySuccess, data.StartTime, data.EndTime)
+		log.Printf(("DependencyName: %s, DependencyType: %s, DependencyTarget: %s, DependencySuccess: %t, StartTime: %s, EndTime: %s\n"), data.Name, data.Type, data.Target, data.Success, StartTime, EndTime)
 		return
 	}
 
-	dependency := appinsights.NewRemoteDependencyTelemetry(data.DependencyName, data.DependencyType, data.DependencyTarget, data.DependencySuccess)
-	dependency.MarkTime(data.StartTime, data.EndTime)
+	dependency := appinsights.NewRemoteDependencyTelemetry(data.Name, data.Type, data.Target, data.Success)
+	dependency.MarkTime(StartTime, EndTime)
 	for k, v := range data.Properties {
 		dependency.Properties[k] = v
 	}
@@ -115,6 +117,7 @@ func TrackDependencyBase(data TelemetryData) {
 
 // Helper function to generate a TrackDependency
 func TrackDependency(
+	dependencyData string,
 	dependencyName string,
 	dependencyType string,
 	dependencyTarget string,
@@ -124,14 +127,23 @@ func TrackDependency(
 	properties map[string]string,
 ) {
 
-	telemetryData := TelemetryData{
-		DependencyName:    dependencyName,
-		DependencyType:    dependencyType,
-		DependencyTarget:  dependencyTarget,
-		DependencySuccess: dependencySuccess,
-		StartTime:         startTime,
-		EndTime:           endTime,
+	telemetryData := RemoteDependencyTelemetryData{
+		Name:    dependencyName,
+		Type:    dependencyType,
+		Target:  dependencyTarget,
+		Success: dependencySuccess,
 	}
 
-	TrackDependencyBase(telemetryData)
+	for k, v := range properties {
+		telemetryData.Properties[k] = v
+	}
+
+	telemetryData.MarkTime(startTime, endTime)
+
+	dependency := appinsights.NewRemoteDependencyTelemetry(telemetryData.Name, telemetryData.Type, telemetryData.Target, telemetryData.Success)
+	dependency.MarkTime(startTime, endTime)
+	for k, v := range properties {
+		dependency.Properties[k] = v
+	}
+	client.Track(dependency)
 }
