@@ -23,8 +23,8 @@ spec:
             secretKeyRef:
               name: appinsights
               key: instrumentationkey
-        - name: EVENT_HUB_CONNECTION_STRING
+        - name: EVENTHUB_PUBLISHER_CONNECTION_STRING
           valueFrom:
             secretKeyRef:
-              name: eventhub
-              key: eventhubconnectionstring
+              name: eventhubpublisher
+              key: eventhubpublisherconnectionstring
