@@ -130,7 +130,7 @@ func (e *EventHub) Subscribe(handler func(Message)) error {
 				EndTime:           time.Now(),
 			}
 			telemetry.TrackDependency(telemetryData)
-			return err
+			return nil
 		}
 
 		handler(msg)
