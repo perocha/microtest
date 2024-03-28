@@ -43,10 +43,10 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Publisher::Message received, will publish message to EventHub (messageID: " + messageID + ")",
 			Properties: map[string]string{
-				"messageId":   messageID,
-				"content":     message.Content,
-				"count":       strconv.Itoa(message.Count),
-				"ServiceName": "Publisher",
+				"messageId": messageID,
+				"content":   message.Content,
+				"count":     strconv.Itoa(message.Count),
+				"roleName":  "Publisher",
 			},
 			Severity: telemetry.Information,
 		}
@@ -58,8 +58,8 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 			telemetryData := telemetry.TelemetryData{
 				Message: "Publisher::Failed to publish message: " + messageID + ")",
 				Properties: map[string]string{
-					"Error":       err.Error(),
-					"ServiceName": "Publisher",
+					"Error":    err.Error(),
+					"roleName": "Publisher",
 				},
 				Severity: telemetry.Error,
 			}
@@ -81,8 +81,8 @@ func main() {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Publisher::Failed to initialize EventHub",
 			Properties: map[string]string{
-				"Error":       err.Error(),
-				"ServiceName": "Publisher",
+				"Error":    err.Error(),
+				"roleName": "Publisher",
 			},
 			Severity: telemetry.Error,
 		}
@@ -111,8 +111,8 @@ func main() {
 	telemetryData := telemetry.TelemetryData{
 		Message: "Publisher::ServerStarted on port " + port,
 		Properties: map[string]string{
-			"port":        port,
-			"ServiceName": "Publisher",
+			"port":     port,
+			"roleName": "Publisher",
 		},
 		Severity: telemetry.Information,
 	}
