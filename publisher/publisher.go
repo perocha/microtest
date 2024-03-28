@@ -33,6 +33,12 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		// Create a new UUID for the message
 		messageID := uuid.New().String()
 
+		// Create a new message to be sent to the event hub
+		msg := messaging.Message{
+			Payload:   message.Content,
+			MessageId: messageID,
+		}
+
 		// Log the event to App Insights
 		telemetryData := telemetry.TelemetryData{
 			Message: "Publisher::Message received, will publish message to EventHub (messageID: " + messageID + ")",
@@ -45,7 +51,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		telemetry.TrackTrace(telemetryData)
 
 		// Publish the message to event hub
-		err = messaging.EventHubInstance.Publish(message.Content, messageID)
+		err = messaging.EventHubInstance.Publish(msg)
 		if err != nil {
 			telemetryData := telemetry.TelemetryData{
 				Message: "Publisher::Failed to publish message: " + messageID + ")",
