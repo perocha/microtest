@@ -5,11 +5,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/microsoft/ApplicationInsights-Go/appinsights"
+	appinsights "github.com/microsoft/ApplicationInsights-Go/appinsights"
 	"github.com/microsoft/ApplicationInsights-Go/appinsights/contracts"
 )
 
 var client appinsights.TelemetryClient
+
+type RequestTelemetryData = appinsights.RequestTelemetry
 
 // TelemetryData is a struct to hold telemetry data
 type TelemetryData struct {
@@ -79,6 +81,21 @@ func TrackTrace(data TelemetryData) {
 		trace.Properties[k] = v
 	}
 	client.Track(trace)
+}
+
+// Send a request trace to App Insights
+func TrackRequest(data RequestTelemetryData) {
+	if client == nil {
+		log.Printf("Name: %s, Url: %v, Duration: %s, ResponseCode: %s, Success: %t\n", data.Name, data.Url, data.Duration, data.ResponseCode, data.Success)
+		return
+	}
+
+	request := appinsights.NewRequestTelemetry(data.Name, data.Url, data.Duration, data.ResponseCode)
+	request.Success = data.Success
+	for k, v := range data.Properties {
+		request.Properties[k] = v
+	}
+	client.Track(request)
 }
 
 // Track a dependency to App Insights

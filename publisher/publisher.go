@@ -16,6 +16,9 @@ import (
 
 // Method publishMessages publishes messages to the event hub
 func publishMessages(w http.ResponseWriter, r *http.Request) {
+	// Start time for tracking duration
+	startTime := time.Now()
+
 	// Parse request body
 	type Message struct {
 		Content string `json:"content"`
@@ -65,6 +68,18 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Track the request to App Insights
+	requestTelemetryData := telemetry.RequestTelemetryData{
+		Name:         r.URL.Path,
+		Url:          r.URL.String(),
+		Duration:     time.Since(startTime),
+		ResponseCode: strconv.Itoa(http.StatusOK),
+		Success:      true,
+		Source:       r.RemoteAddr,
+	}
+	telemetry.TrackRequest(requestTelemetryData)
+
+	// Send HTTP response with status code 200 (OK)
 	w.WriteHeader(http.StatusOK)
 }
 
