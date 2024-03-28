@@ -134,13 +134,8 @@ func TrackDependency(
 		Success: dependencySuccess,
 	}
 
-	for k, v := range properties {
-		telemetryData.Properties[k] = v
-	}
-
-	telemetryData.MarkTime(startTime, endTime)
-
 	dependency := appinsights.NewRemoteDependencyTelemetry(telemetryData.Name, telemetryData.Type, telemetryData.Target, telemetryData.Success)
+	dependency.Data = dependencyData
 	dependency.MarkTime(startTime, endTime)
 	for k, v := range properties {
 		dependency.Properties[k] = v
