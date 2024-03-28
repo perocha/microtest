@@ -1,12 +1,24 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+
+	eventhub "github.com/Azure/azure-event-hubs-go"
+)
+
+/*
+import (
 	"log"
 	"os"
 	"time"
 
 	"github.com/microtest/messaging"
 	"github.com/microtest/telemetry"
+
+	eventhub "github.com/Azure/azure-event-hubs-go"
 )
 
 // Method consumeMessages subscribes to the event hub and consumes messages
@@ -70,4 +82,33 @@ func main() {
 	for {
 		time.Sleep(time.Second)
 	}
+}
+*/
+
+
+func main() {
+	// Replace with your connection string
+	connStr := os.Getenv("EVENTHUB_CONSUMER_CONNECTION_STRING")
+
+	hub, err := eventhub.NewHubFromConnectionString(connStr)
+	if err != nil {
+		log.Fatalf("failed to get hub: %s\n", err)
+	}
+
+	// Register a handler for the Event Hub
+	_, err = hub.Receive(
+		context.Background(),
+		"0", // This is the partition ID
+		func(ctx context.Context, event *eventhub.Event) error {
+			fmt.Printf("received: %s\n", string(event.Data))
+			return nil
+		},
+		eventhub.ReceiveWithLatestOffset(),
+	)
+
+	if err != nil {
+		log.Fatalf("failed to receive: %s\n", err)
+	}
+
+	select {} // Keeps the program running to receive messages
 }
