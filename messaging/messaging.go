@@ -96,7 +96,12 @@ func (e *EventHub) Subscribe(handler func(string)) error {
 
 	// Create a new context for the message and receive it
 	ctx := context.Background()
+
+	log.Println("messaging::consumer::subscribing to EventHub::ctx created")
+
 	_, err := e.Hub.Receive(ctx, "$Default", func(ctx context.Context, event *eventhub.Event) error {
+		log.Println("messaging::consumer::subscribing to EventHub::message received")
+
 		message := string(event.Data)
 		handler(message)
 
