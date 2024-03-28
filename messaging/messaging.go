@@ -92,20 +92,14 @@ func (e *EventHub) Publish(message string, messageID string) error {
 func (e *EventHub) Subscribe(handler func(string)) error {
 	startTime := time.Now()
 
-	log.Println("messaging::consumer::subscribing to EventHub")
-
 	// Create a new context for the message and receive it
 	ctx := context.Background()
-
-	log.Println("messaging::consumer::subscribing to EventHub::ctx created")
 
 	_, err := e.Hub.Receive(ctx, "0", func(ctx context.Context, event *eventhub.Event) error {
 		log.Println("messaging::consumer::subscribing to EventHub::message received")
 
 		message := string(event.Data)
 		handler(message)
-
-		log.Println("messaging::consumer::message received: " + message)
 
 		// Log the event to App Insights
 		telemetryData := telemetry.TelemetryData{
@@ -114,9 +108,12 @@ func (e *EventHub) Subscribe(handler func(string)) error {
 				"content": message,
 				"size":    strconv.Itoa(len(event.Data)), // size of the message in bytes
 			},
-			Severity: telemetry.Information,
+			DependencyType:    "EventHub",
+			DependencySuccess: true,
+			StartTime:         startTime,
+			EndTime:           time.Now(),
 		}
-		telemetry.TrackTrace(telemetryData)
+		telemetry.TrackDependency(telemetryData)
 
 		return nil
 	})
