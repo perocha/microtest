@@ -2,11 +2,11 @@ package messaging
 
 import (
 	"context"
-	"time"
-	"strconv"
 	"log"
+	"strconv"
+	"time"
 
-	"github.com/Azure/azure-event-hubs-go"
+	eventhub "github.com/Azure/azure-event-hubs-go"
 	"github.com/microtest/telemetry"
 )
 
@@ -30,11 +30,11 @@ func NewEventHub(serviceName string, connectionString string) error {
 
 	// Log the event to App Insights
 	telemetryData := telemetry.TelemetryData{
-		Message: "Messaging::EventHub initialized by " + serviceName,
-		DependencyType: "EventHub",
+		Message:           "Messaging::EventHub initialized by " + serviceName,
+		DependencyType:    "EventHub",
 		DependencySuccess: true,
-		StartTime: startTime,
-		EndTime: time.Now(),
+		StartTime:         startTime,
+		EndTime:           time.Now(),
 	}
 	telemetry.TrackDependency(telemetryData)
 
@@ -61,13 +61,13 @@ func (e *EventHub) Publish(message string, messageID string) error {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Messaging::Publish::Failed to send message to EventHub",
 			Properties: map[string]string{
-				"Error": err.Error(),
+				"Error":     err.Error(),
 				"messageId": messageID,
 			},
-			DependencyType: "EventHub",
+			DependencyType:    "EventHub",
 			DependencySuccess: false,
-			StartTime: startTime,
-			EndTime: time.Now(),
+			StartTime:         startTime,
+			EndTime:           time.Now(),
 		}
 		telemetry.TrackDependency(telemetryData)
 	} else {
@@ -77,10 +77,10 @@ func (e *EventHub) Publish(message string, messageID string) error {
 			Properties: map[string]string{
 				"messageId": messageID,
 			},
-			DependencyType: "EventHub",
+			DependencyType:    "EventHub",
 			DependencySuccess: true,
-			StartTime: startTime,
-			EndTime: time.Now(),
+			StartTime:         startTime,
+			EndTime:           time.Now(),
 		}
 		telemetry.TrackDependency(telemetryData)
 	}
@@ -99,7 +99,7 @@ func (e *EventHub) Subscribe(handler func(string)) error {
 
 	log.Println("messaging::consumer::subscribing to EventHub::ctx created")
 
-	_, err := e.Hub.Receive(ctx, "$Default", func(ctx context.Context, event *eventhub.Event) error {
+	_, err := e.Hub.Receive(ctx, "0", func(ctx context.Context, event *eventhub.Event) error {
 		log.Println("messaging::consumer::subscribing to EventHub::message received")
 
 		message := string(event.Data)
@@ -112,7 +112,7 @@ func (e *EventHub) Subscribe(handler func(string)) error {
 			Message: "Messaging::Subscribe::Message received from EventHub",
 			Properties: map[string]string{
 				"content": message,
-				"size":    strconv.Itoa(len(event.Data)),  // size of the message in bytes
+				"size":    strconv.Itoa(len(event.Data)), // size of the message in bytes
 			},
 			Severity: telemetry.Information,
 		}
@@ -126,12 +126,12 @@ func (e *EventHub) Subscribe(handler func(string)) error {
 
 		// Failed to receive message, log dependency failure to App Insights
 		telemetryData := telemetry.TelemetryData{
-			Message: "Messaging::Subscribe::Failed to receive message from EventHub",
-			Properties: map[string]string{"Error": err.Error()},
-			DependencyType: "EventHub",
+			Message:           "Messaging::Subscribe::Failed to receive message from EventHub",
+			Properties:        map[string]string{"Error": err.Error()},
+			DependencyType:    "EventHub",
 			DependencySuccess: false,
-			StartTime: startTime,
-			EndTime: time.Now(),
+			StartTime:         startTime,
+			EndTime:           time.Now(),
 		}
 		telemetry.TrackDependency(telemetryData)
 	}

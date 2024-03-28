@@ -1,5 +1,6 @@
 package main
 
+/*
 import (
 	"context"
 	"fmt"
@@ -8,8 +9,8 @@ import (
 
 	eventhub "github.com/Azure/azure-event-hubs-go"
 )
+*/
 
-/*
 import (
 	"log"
 	"os"
@@ -17,8 +18,6 @@ import (
 
 	"github.com/microtest/messaging"
 	"github.com/microtest/telemetry"
-
-	eventhub "github.com/Azure/azure-event-hubs-go"
 )
 
 // Method consumeMessages subscribes to the event hub and consumes messages
@@ -83,8 +82,8 @@ func main() {
 		time.Sleep(time.Second)
 	}
 }
-*/
 
+/*
 
 func main() {
 	// Replace with your connection string
@@ -112,3 +111,5 @@ func main() {
 
 	select {} // Keeps the program running to receive messages
 }
+
+*/
