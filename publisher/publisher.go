@@ -43,9 +43,11 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Publisher::Message received, will publish message to EventHub (messageID: " + messageID + ")",
 			Properties: map[string]string{
-				"messageId": messageID,
-				"content":   message.Content,
-				"count":     strconv.Itoa(message.Count)},
+				"messageId":   messageID,
+				"content":     message.Content,
+				"count":       strconv.Itoa(message.Count),
+				"ServiceName": "Publisher",
+			},
 			Severity: telemetry.Information,
 		}
 		telemetry.TrackTrace(telemetryData)
@@ -56,7 +58,9 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 			telemetryData := telemetry.TelemetryData{
 				Message: "Publisher::Failed to publish message: " + messageID + ")",
 				Properties: map[string]string{
-					"Error": err.Error()},
+					"Error":       err.Error(),
+					"ServiceName": "Publisher",
+				},
 				Severity: telemetry.Error,
 			}
 			telemetry.TrackTrace(telemetryData)
@@ -75,9 +79,12 @@ func main() {
 	err := messaging.NewEventHub("Publisher", eventHubConnectionString)
 	if err != nil {
 		telemetryData := telemetry.TelemetryData{
-			Message:    "Publisher::Failed to initialize EventHub",
-			Properties: map[string]string{"Error": err.Error()},
-			Severity:   telemetry.Error,
+			Message: "Publisher::Failed to initialize EventHub",
+			Properties: map[string]string{
+				"Error":       err.Error(),
+				"ServiceName": "Publisher",
+			},
+			Severity: telemetry.Error,
 		}
 		telemetry.TrackTrace(telemetryData)
 	}
@@ -102,9 +109,12 @@ func main() {
 
 	// Log the event to App Insights
 	telemetryData := telemetry.TelemetryData{
-		Message:    "Publisher::ServerStarted on port " + port,
-		Properties: map[string]string{"port": port},
-		Severity:   telemetry.Information,
+		Message: "Publisher::ServerStarted on port " + port,
+		Properties: map[string]string{
+			"port":        port,
+			"ServiceName": "Publisher",
+		},
+		Severity: telemetry.Information,
 	}
 	telemetry.TrackTrace(telemetryData)
 

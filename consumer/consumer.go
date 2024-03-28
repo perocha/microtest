@@ -16,8 +16,9 @@ func consumeMessages() {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Consumer::Message received from EventHub",
 			Properties: map[string]string{
-				"payload":   msg.Payload,
-				"messageId": msg.MessageId,
+				"payload":     msg.Payload,
+				"messageId":   msg.MessageId,
+				"ServiceName": "Consumer",
 			},
 			Severity: telemetry.Information,
 		}
@@ -29,7 +30,8 @@ func consumeMessages() {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Consumer::Failed to subscribe to EventHub",
 			Properties: map[string]string{
-				"Error": err.Error(),
+				"Error":       err.Error(),
+				"ServiceName": "Consumer",
 			},
 			Severity: telemetry.Error,
 		}
@@ -46,9 +48,12 @@ func main() {
 	err := messaging.NewEventHub("Consumer", eventHubConnectionString)
 	if err != nil {
 		telemetryData := telemetry.TelemetryData{
-			Message:    "Consumer::Failed to initialize EventHub",
-			Properties: map[string]string{"Error": err.Error()},
-			Severity:   telemetry.Error,
+			Message: "Consumer::Failed to initialize EventHub",
+			Properties: map[string]string{
+				"Error":       err.Error(),
+				"ServiceName": "Consumer",
+			},
+			Severity: telemetry.Error,
 		}
 		telemetry.TrackTrace(telemetryData)
 	}
