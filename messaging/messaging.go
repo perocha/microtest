@@ -141,6 +141,7 @@ func (e *EventHub) Subscribe(handler func(Message)) error {
 			Properties: map[string]string{
 				"content":   msg.Payload,
 				"messageId": msg.MessageId,
+				"msg":       string(event.Data),
 				"size":      strconv.Itoa(len(event.Data)), // size of the message in bytes
 			},
 			DependencyType:    "EventHub",
