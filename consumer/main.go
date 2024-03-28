@@ -1,12 +1,12 @@
 package main
 
 import (
+	"log"
 	"os"
 	"time"
-	"log"
 
-	"github.com/microtest/telemetry"
 	"github.com/microtest/messaging"
+	"github.com/microtest/telemetry"
 )
 
 // Method consumeMessages subscribes to the event hub and consumes messages
@@ -50,15 +50,15 @@ func main() {
 	log.Println("consumer::initialized telemetry")
 
 	// Initialize a new EventHub instance
-	eventHubConnectionString := os.Getenv("EVENT_HUB_CONNECTION_STRING")
+	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMER_CONNECTION_STRING")
 	err := messaging.NewEventHub("Consumer", eventHubConnectionString)
 	if err != nil {
 		log.Println("consumer::failed to initialize EventHub: " + err.Error())
 
 		telemetryData := telemetry.TelemetryData{
-			Message: "Consumer::Failed to initialize EventHub",
+			Message:    "Consumer::Failed to initialize EventHub",
 			Properties: map[string]string{"Error": err.Error()},
-			Severity: telemetry.Error,
+			Severity:   telemetry.Error,
 		}
 		telemetry.TrackTrace(telemetryData)
 	}

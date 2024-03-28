@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
-	"time"
 	"strconv"
+	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 
-	"github.com/microtest/telemetry"
 	"github.com/microtest/messaging"
+	"github.com/microtest/telemetry"
 )
 
 // Method publishMessages publishes messages to the event hub
@@ -65,13 +65,13 @@ func main() {
 	telemetry.InitTelemetry("Publisher")
 
 	// Initialize a new EventHub instance
-	eventHubConnectionString := os.Getenv("EVENT_HUB_CONNECTION_STRING")
+	eventHubConnectionString := os.Getenv("EVENTHUB_PUBLISHER_CONNECTION_STRING")
 	err := messaging.NewEventHub("Publisher", eventHubConnectionString)
 	if err != nil {
 		telemetryData := telemetry.TelemetryData{
-			Message: "Publisher::Failed to initialize EventHub",
+			Message:    "Publisher::Failed to initialize EventHub",
 			Properties: map[string]string{"Error": err.Error()},
-			Severity: telemetry.Error,
+			Severity:   telemetry.Error,
 		}
 		telemetry.TrackTrace(telemetryData)
 	}
@@ -96,9 +96,9 @@ func main() {
 
 	// Log the event to App Insights
 	telemetryData := telemetry.TelemetryData{
-		Message: "Publisher::ServerStarted on port " + port,
+		Message:    "Publisher::ServerStarted on port " + port,
 		Properties: map[string]string{"port": port},
-		Severity: telemetry.Information,
+		Severity:   telemetry.Information,
 	}
 	telemetry.TrackTrace(telemetryData)
 
