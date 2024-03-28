@@ -18,7 +18,6 @@ func consumeMessages() {
 			Properties: map[string]string{
 				"payload":   msg.Payload,
 				"messageId": msg.MessageId,
-				"roleName":  "Consumer",
 			},
 			Severity: telemetry.Information,
 		}
@@ -30,8 +29,7 @@ func consumeMessages() {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Consumer::Failed to subscribe to EventHub",
 			Properties: map[string]string{
-				"Error":    err.Error(),
-				"roleName": "Consumer",
+				"Error": err.Error(),
 			},
 			Severity: telemetry.Error,
 		}
@@ -50,8 +48,7 @@ func main() {
 		telemetryData := telemetry.TelemetryData{
 			Message: "Consumer::Failed to initialize EventHub",
 			Properties: map[string]string{
-				"Error":    err.Error(),
-				"roleName": "Consumer",
+				"Error": err.Error(),
 			},
 			Severity: telemetry.Error,
 		}

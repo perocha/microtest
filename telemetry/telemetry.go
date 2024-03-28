@@ -13,15 +13,15 @@ var client appinsights.TelemetryClient
 
 // TelemetryData is a struct to hold telemetry data
 type TelemetryData struct {
-    Message     string
-    Severity    contracts.SeverityLevel
-    Properties  map[string]string
-    Error       error
-	DependencyType string
-	DependencyData string
+	Message           string
+	Severity          contracts.SeverityLevel
+	Properties        map[string]string
+	Error             error
+	DependencyType    string
+	DependencyData    string
 	DependencySuccess bool
-	StartTime   time.Time
-	EndTime     time.Time
+	StartTime         time.Time
+	EndTime           time.Time
 }
 
 // Telemetry severity levels
@@ -45,8 +45,11 @@ func InitTelemetry(serviceName string) {
 	// Create the client
 	client = appinsights.NewTelemetryClient(instrumentationKey)
 
+	// Set the role name
+	client.Context().Tags.Cloud().SetRole(serviceName)
+
 	// Send a trace message to make sure it's working
-	client.TrackTrace("Telemetry::App Insights initialized by " + serviceName, contracts.Information)
+	client.TrackTrace("Telemetry::App Insights initialized by "+serviceName, contracts.Information)
 }
 
 // TrackException sends an exception to App Insights
@@ -64,21 +67,21 @@ func TrackException(err error) {
 // Sends a trace message to App Insights
 func TrackTrace(data TelemetryData) {
 	if client == nil {
-        log.Printf("Message: %s, Properties: %v\n", data.Message, data.Properties)
-        return
-    }
+		log.Printf("Message: %s, Properties: %v\n", data.Message, data.Properties)
+		return
+	}
 
-    trace := appinsights.NewTraceTelemetry(data.Message, data.Severity)
-    for k, v := range data.Properties {
-        trace.Properties[k] = v
-    }
-    client.Track(trace)
+	trace := appinsights.NewTraceTelemetry(data.Message, data.Severity)
+	for k, v := range data.Properties {
+		trace.Properties[k] = v
+	}
+	client.Track(trace)
 }
 
 // Track a dependency to App Insights
 func TrackDependency(data TelemetryData) {
 	if client == nil {
-		log.Printf("Dependency: %s, Data: %s, Message: %s, Success: %t\n", data.DependencyType, data.DependencyData, data.Message, data.DependencySuccess)		
+		log.Printf("Dependency: %s, Data: %s, Message: %s, Success: %t\n", data.DependencyType, data.DependencyData, data.Message, data.DependencySuccess)
 		return
 	}
 
