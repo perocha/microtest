@@ -89,7 +89,8 @@ func TrackDependency(data TelemetryData) {
 		return
 	}
 
-	dependency := appinsights.NewRemoteDependencyTelemetry(data.DependencyType, data.DependencyData, data.Message, data.DependencySuccess)
+	//	dependency := appinsights.NewRemoteDependencyTelemetry(data.DependencyType, data.DependencyData, data.Message, data.DependencySuccess)
+	dependency := appinsights.NewRemoteDependencyTelemetry(data.DependencyName, data.DependencyType, data.DependencyTarget, data.DependencySuccess)
 	dependency.MarkTime(data.StartTime, data.EndTime)
 	for k, v := range data.Properties {
 		dependency.Properties[k] = v
