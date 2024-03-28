@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
+	"strings"
 	"time"
 
 	eventhub "github.com/Azure/azure-event-hubs-go"
@@ -13,7 +14,8 @@ import (
 var EventHubInstance *EventHub
 
 type EventHub struct {
-	Hub *eventhub.Hub
+	Hub          *eventhub.Hub
+	EventHubName string
 }
 
 // Message represents the structure of a message
@@ -32,12 +34,13 @@ func NewEventHub(serviceName string, connectionString string) error {
 		telemetry.TrackException(err)
 		return err
 	}
-	EventHubInstance = &EventHub{Hub: hub}
+	EventHubInstance = &EventHub{Hub: hub, EventHubName: getEventHubName(connectionString)}
 
 	// Log the event to App Insights
 	telemetryData := telemetry.TelemetryData{
 		Message:           "Messaging::EventHub initialized by " + serviceName,
 		DependencyType:    "EventHub",
+		DependencyTarget:  EventHubInstance.EventHubName,
 		DependencySuccess: true,
 		StartTime:         startTime,
 		EndTime:           time.Now(),
@@ -62,6 +65,7 @@ func (e *EventHub) Publish(serviceName string, msg Message) error {
 			Message:           "Messaging::Publish::Failed to marshal message",
 			Properties:        map[string]string{"Error": err.Error()},
 			DependencyName:    serviceName,
+			DependencyTarget:  e.EventHubName,
 			DependencyType:    "EventHub",
 			DependencySuccess: false,
 			StartTime:         startTime,
@@ -88,6 +92,7 @@ func (e *EventHub) Publish(serviceName string, msg Message) error {
 			Id:                msg.MessageId,
 			DependencyName:    serviceName,
 			DependencyType:    "EventHub",
+			DependencyTarget:  e.EventHubName,
 			DependencySuccess: false,
 			StartTime:         startTime,
 			EndTime:           time.Now(),
@@ -103,6 +108,7 @@ func (e *EventHub) Publish(serviceName string, msg Message) error {
 			Id:                msg.MessageId,
 			DependencyName:    serviceName,
 			DependencyType:    "EventHub",
+			DependencyTarget:  e.EventHubName,
 			DependencySuccess: true,
 			StartTime:         startTime,
 			EndTime:           time.Now(),
@@ -133,6 +139,7 @@ func (e *EventHub) Subscribe(serviceName string, handler func(Message)) error {
 				},
 				DependencyName:    serviceName,
 				DependencyType:    "EventHub",
+				DependencyTarget:  e.EventHubName,
 				DependencySuccess: false,
 				StartTime:         startTime,
 				EndTime:           time.Now(),
@@ -155,6 +162,7 @@ func (e *EventHub) Subscribe(serviceName string, handler func(Message)) error {
 			Id:                msg.MessageId,
 			DependencyName:    serviceName,
 			DependencyType:    "EventHub",
+			DependencyTarget:  e.EventHubName,
 			DependencySuccess: true,
 			StartTime:         startTime,
 			EndTime:           time.Now(),
@@ -171,6 +179,7 @@ func (e *EventHub) Subscribe(serviceName string, handler func(Message)) error {
 			Properties:        map[string]string{"Error": err.Error()},
 			DependencyName:    serviceName,
 			DependencyType:    "EventHub",
+			DependencyTarget:  e.EventHubName,
 			DependencySuccess: false,
 			StartTime:         startTime,
 			EndTime:           time.Now(),
@@ -179,4 +188,18 @@ func (e *EventHub) Subscribe(serviceName string, handler func(Message)) error {
 	}
 
 	return err
+}
+
+// Function to get the EventHub name from the connection string
+func getEventHubName(connectionString string) string {
+	// Connection string format: Endpoint=sb://<NAMESPACE>.servicebus.windows.net/;SharedAccessKeyName=<KEYNAME
+	// ;SharedAccessKey=<KEY>;EntityPath=<EVENTHUBNAME>
+	// Split the connection string by ;
+	parts := strings.Split(connectionString, ";")
+	for _, part := range parts {
+		if strings.HasPrefix(part, "EntityPath=") {
+			return strings.Split(part, "=")[1]
+		}
+	}
+	return ""
 }
