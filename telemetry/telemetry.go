@@ -101,21 +101,6 @@ func TrackRequest(data RequestTelemetryData) {
 }
 
 // Track a dependency to App Insights
-func TrackDependencyBase(data RemoteDependencyTelemetryData, StartTime time.Time, EndTime time.Time) {
-	if client == nil {
-		log.Printf(("DependencyName: %s, DependencyType: %s, DependencyTarget: %s, DependencySuccess: %t, StartTime: %s, EndTime: %s\n"), data.Name, data.Type, data.Target, data.Success, StartTime, EndTime)
-		return
-	}
-
-	dependency := appinsights.NewRemoteDependencyTelemetry(data.Name, data.Type, data.Target, data.Success)
-	dependency.MarkTime(StartTime, EndTime)
-	for k, v := range data.Properties {
-		dependency.Properties[k] = v
-	}
-	client.Track(dependency)
-}
-
-// Helper function to generate a TrackDependency
 func TrackDependency(
 	dependencyData string,
 	dependencyName string,
@@ -126,15 +111,7 @@ func TrackDependency(
 	endTime time.Time,
 	properties map[string]string,
 ) {
-
-	telemetryData := RemoteDependencyTelemetryData{
-		Name:    dependencyName,
-		Type:    dependencyType,
-		Target:  dependencyTarget,
-		Success: dependencySuccess,
-	}
-
-	dependency := appinsights.NewRemoteDependencyTelemetry(telemetryData.Name, telemetryData.Type, telemetryData.Target, telemetryData.Success)
+	dependency := appinsights.NewRemoteDependencyTelemetry(dependencyName, dependencyType, dependencyTarget, dependencySuccess)
 	dependency.Data = dependencyData
 	dependency.MarkTime(startTime, endTime)
 	for k, v := range properties {
