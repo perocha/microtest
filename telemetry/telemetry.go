@@ -20,7 +20,6 @@ type TelemetryData struct {
 	Error             error
 	DependencyName    string // Name of the command that initiated this dependency call
 	DependencyType    string
-	DependencyData    string
 	DependencyTarget  string
 	DependencySuccess bool
 	StartTime         time.Time
@@ -85,15 +84,37 @@ func TrackTrace(data TelemetryData) {
 // Track a dependency to App Insights
 func TrackDependency(data TelemetryData) {
 	if client == nil {
-		log.Printf("Dependency: %s, Data: %s, Message: %s, Success: %t\n", data.DependencyType, data.DependencyData, data.Message, data.DependencySuccess)
+		log.Printf(("DependencyName: %s, DependencyType: %s, DependencyTarget: %s, DependencySuccess: %t, StartTime: %s, EndTime: %s\n"), data.DependencyName, data.DependencyType, data.DependencyTarget, data.DependencySuccess, data.StartTime, data.EndTime)
 		return
 	}
 
-	//	dependency := appinsights.NewRemoteDependencyTelemetry(data.DependencyType, data.DependencyData, data.Message, data.DependencySuccess)
 	dependency := appinsights.NewRemoteDependencyTelemetry(data.DependencyName, data.DependencyType, data.DependencyTarget, data.DependencySuccess)
 	dependency.MarkTime(data.StartTime, data.EndTime)
 	for k, v := range data.Properties {
 		dependency.Properties[k] = v
 	}
 	client.Track(dependency)
+}
+
+// Helper function to generate a TrackDependency
+func TrackDependencyTest(
+	dependencyName string,
+	dependencyType string,
+	dependencyTarget string,
+	dependencySuccess bool,
+	startTime time.Time,
+	endTime time.Time,
+	properties map[string]string,
+) {
+
+	telemetryData := TelemetryData{
+		DependencyName:    dependencyName,
+		DependencyType:    dependencyType,
+		DependencyTarget:  dependencyTarget,
+		DependencySuccess: dependencySuccess,
+		StartTime:         startTime,
+		EndTime:           endTime,
+	}
+
+	TrackDependency(telemetryData)
 }
