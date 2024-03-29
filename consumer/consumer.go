@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"time"
 
 	"github.com/microtest/messaging"
 	"github.com/microtest/telemetry"
@@ -61,6 +60,7 @@ func consumeMessages() {
 		}
 	}
 */
+
 func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry("Consumer")
@@ -69,28 +69,36 @@ func main() {
 	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMER_CONNECTION_STRING")
 	err := messaging.NewEventHub("Consumer init", eventHubConnectionString)
 	if err != nil {
-		telemetry.TrackTrace("Consumer::Failed to initialize EventHub", telemetry.Error, map[string]string{"Error": err.Error()})
+		handleError("Failed to initialize EventHub", err)
+		return
 	}
 
-	// Keep the service running
-	for {
-		// Start consuming messages
-		partitionID := "0"
-		consumeMessage(partitionID)
-
-		time.Sleep(time.Second)
+	// Start consuming messages
+	partitionID := "0"
+	err = consumeMessages(partitionID)
+	if err != nil {
+		handleError("Failed to consume messages", err)
+		return
 	}
 }
 
-func consumeMessage(partitionID string) {
-	// Listen for messages on the specified partition
-	messages := messaging.ListenForMessages("Consumer", partitionID)
+func consumeMessages(partitionID string) error {
+	// Create a channel to receive messages
+	messages := make(chan messaging.Message)
+
+	// Subscribe to messages on the specified partition
+	err := messaging.EventHubInstance.ListenForMessages("Consumer", partitionID, messages)
+	if err != nil {
+		return err
+	}
 
 	// Process received messages
 	for msg := range messages {
 		// Execute your business logic for each message
 		processMessage(msg)
 	}
+
+	return nil
 }
 
 func processMessage(msg messaging.Message) {
@@ -98,4 +106,9 @@ func processMessage(msg messaging.Message) {
 	// For example:
 	// Log the event to App Insights
 	telemetry.TrackTrace("Consumer::processMessage", telemetry.Information, map[string]string{"payload": msg.Payload, "messageId": msg.MessageId})
+}
+
+func handleError(message string, err error) {
+	// Log the error using telemetry
+	telemetry.TrackTrace("Consumer::"+message, telemetry.Error, map[string]string{"Error": err.Error()})
 }

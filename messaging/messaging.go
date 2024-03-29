@@ -197,28 +197,38 @@ func NewReceiver(connectionString string) (*Receiver, error) {
 }
 
 // ListenForMessages starts listening for messages on the provided hub and partition
-func ListenForMessages(serviceName string, partitionID string) <-chan Message {
+func (e *EventHub) ListenForMessages(serviceName string, partitionID string, messages chan<- Message) error {
 	startTime := time.Now()
 
-	messages := make(chan Message)
+	// Create a new context for the message and receive it
+	ctx := context.Background()
 
-	handler := func(ctx context.Context, event *eventhub.Event) error {
-		text := string(event.Data)
-		message := Message{
-			Payload:   text,
-			MessageId: event.ID,
+	// Start receiving messages from the specified partition
+	_, err := e.Hub.Receive(ctx, partitionID, func(ctx context.Context, event *eventhub.Event) error {
+		// Unmarshal the JSON message received
+		var msg Message
+		err := json.Unmarshal(event.Data, &msg)
+		if err != nil {
+			// Log the error using telemetry.TrackDependency
+			telemetry.TrackDependency("Failed to unmarshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
+			return err
 		}
-		messages <- message
+
+		// Send the message to the consumer
+		select {
+		case messages <- msg:
+		default:
+			// If the messages channel is full, you can choose to handle this case as needed
+			telemetry.TrackDependency("Messages channel is full. Dropping message.", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), nil)
+		}
+
 		return nil
+	})
+
+	if err != nil {
+		// Log the error using telemetry.TrackDependency
+		telemetry.TrackDependency("Error receiving message from partition", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
 	}
 
-	go func() {
-		defer close(messages)
-		_, err := EventHubInstance.Hub.Receive(context.Background(), partitionID, handler, eventhub.ReceiveWithLatestOffset())
-		if err != nil {
-			telemetry.TrackDependency("Error", serviceName, "EventHub", "event hub name", false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
-		}
-	}()
-
-	return messages
+	return err
 }
