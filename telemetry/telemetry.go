@@ -85,6 +85,19 @@ func TrackTrace(data TelemetryData) {
 	client.Track(trace)
 }
 
+func TrackTraceTest(Message string, Severity contracts.SeverityLevel, Properties map[string]string) {
+	if client == nil {
+		log.Printf("Message: %s, Properties: %v, Severity: %v\n", Message, Properties, Severity)
+		return
+	}
+
+	trace := appinsights.NewTraceTelemetry(Message, Severity)
+	for k, v := range Properties {
+		trace.Properties[k] = v
+	}
+	client.Track(trace)
+}
+
 // Send a request trace to App Insights
 func TrackRequest(data RequestTelemetryData) {
 	if client == nil {
