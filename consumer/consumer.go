@@ -106,7 +106,7 @@ func consumeMessages(partitionID string) error {
 // processMessage is the business logic that processes the message
 func processMessage(msg messaging.Message) {
 	// Log the event to App Insights
-	telemetry.TrackTrace("Consumer::processMessage", telemetry.Information, map[string]string{"payload": msg.Payload, "messageId": msg.MessageId})
+	telemetry.TrackTrace("Consumer::processMessage::"+msg.MessageId, telemetry.Information, map[string]string{"payload": msg.Payload, "messageId": msg.MessageId})
 }
 
 // handleError logs the error message and error to App Insights
