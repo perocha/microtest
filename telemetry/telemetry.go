@@ -13,23 +13,6 @@ var client appinsights.TelemetryClient
 
 type RequestTelemetryData = appinsights.RequestTelemetry
 
-type RemoteDependencyTelemetryData = appinsights.RemoteDependencyTelemetry
-
-// TelemetryData is a struct to hold telemetry data
-type TelemetryData struct {
-	Message           string
-	Id                string // Id to correlate telemetry data
-	Severity          contracts.SeverityLevel
-	Properties        map[string]string
-	Error             error
-	DependencyName    string // Name of the command that initiated this dependency call
-	DependencyType    string
-	DependencyTarget  string
-	DependencySuccess bool
-	StartTime         time.Time
-	EndTime           time.Time
-}
-
 // Telemetry severity levels
 const (
 	Verbose     = contracts.Verbose
@@ -86,15 +69,15 @@ func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map
 }
 
 // Send a request trace to App Insights
-func TrackRequest(data RequestTelemetryData) {
+func TrackRequest(Method string, Url string, Duration time.Duration, ResponseCode string, Success bool, Source string, Properties map[string]string) {
 	if client == nil {
-		log.Printf("Name: %s, Url: %v, Duration: %s, ResponseCode: %s, Success: %t\n", data.Name, data.Url, data.Duration, data.ResponseCode, data.Success)
+		log.Printf("Name: %s, Url: %v, Duration: %s, ResponseCode: %s, Success: %t\n", Method, Url, Duration, ResponseCode, Success)
 		return
 	}
 
-	request := appinsights.NewRequestTelemetry(data.Name, data.Url, data.Duration, data.ResponseCode)
-	request.Success = data.Success
-	for k, v := range data.Properties {
+	request := appinsights.NewRequestTelemetry(Method, Url, Duration, ResponseCode)
+	request.Success = Success
+	for k, v := range Properties {
 		request.Properties[k] = v
 	}
 	client.Track(request)

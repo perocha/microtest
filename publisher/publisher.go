@@ -57,15 +57,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Everything was OK, track the "request" call trace to App Insights
-	requestTelemetryData := telemetry.RequestTelemetryData{
-		Name:         r.URL.Path,
-		Url:          r.URL.String(),
-		Duration:     time.Since(startTime),
-		ResponseCode: strconv.Itoa(http.StatusOK),
-		Success:      true,
-		Source:       r.RemoteAddr,
-	}
-	telemetry.TrackRequest(requestTelemetryData)
+	telemetry.TrackRequest(r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
 
 	// Send HTTP response with status code 200 (OK)
 	w.WriteHeader(http.StatusOK)
