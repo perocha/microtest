@@ -43,15 +43,19 @@ func InitTelemetry(serviceName string) {
 }
 
 // TrackException sends an exception to App Insights
-func TrackException(err error) {
+func TrackException(err error, Severity contracts.SeverityLevel, Properties map[string]string) {
 	if client == nil {
 		log.Printf("Exception: %s\n", err.Error())
 		return
 	}
 
-	// TODO: How to write a Message in the Exception??
+	exception := appinsights.NewExceptionTelemetry(err)
+	exception.SeverityLevel = Severity
+	for k, v := range Properties {
+		exception.Properties[k] = v
+	}
 
-	client.TrackException(err)
+	client.Track(exception)
 }
 
 // Sends a trace message to App Insights

@@ -47,7 +47,7 @@ func NewEventHub(serviceName string, connectionString string) error {
 	// Create a new EventHub instance
 	hub, err := eventhub.NewHubFromConnectionString(connectionString)
 	if err != nil {
-		telemetry.TrackException(err)
+		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Failed to create new event hub instance"})
 		return err
 	}
 	EventHubInstance = &EventHub{Hub: hub, EventHubName: getEventHubName(connectionString)}

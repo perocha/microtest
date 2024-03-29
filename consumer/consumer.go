@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/microtest/messaging"
+	"github.com/microtest/storage"
 	"github.com/microtest/telemetry"
 )
 
@@ -19,13 +20,38 @@ func main() {
 		return
 	}
 
-	// Start consuming messages
-	partitionID := "0"
-	err = consumeMessages(partitionID)
+	// Create a lease manager for partition leasing using Azure Blob Storage
+	storageConnectionString := os.Getenv("STORAGE_CONNECTION_STRING")
+	leaseManager, err := storage.NewLeaseManager("Consumer", storageConnectionString, "PartitionLeases")
 	if err != nil {
-		handleError("Failed to consume messages", err)
+		handleError("Failed to initialize LeaseManager", err)
 		return
 	}
+
+	// Define the number of partitions and consumer pods
+	numPartitions := 4
+	numConsumers := 4
+
+	// Define lease duration
+	leaseDuration := int32(30) // Adjust lease duration as needed
+
+	// Start consumer pods
+	for i := 0; i < numConsumers; i++ {
+		go func(consumerID int) {
+			// Get a lease for an available partition
+			partitionID, err := leaseManager.AcquireLease(consumerID, numPartitions, leaseDuration)
+			if err != nil {
+				handleError("Failed to acquire lease", err)
+				return
+			}
+
+			// Start consuming messages from the assigned partition
+			consumeMessages(partitionID)
+		}(i)
+	}
+
+	// Keep the main goroutine running to allow consumer pods to run in the background
+	select {}
 }
 
 // consumeMessages subscribes to the event hub and consumes messages
@@ -58,5 +84,6 @@ func processMessage(msg messaging.Message) {
 // handleError logs the error message and error to App Insights
 func handleError(message string, err error) {
 	// Log the error using telemetry
-	telemetry.TrackTrace("Consumer::"+message, telemetry.Error, map[string]string{"Error": err.Error()})
+	//	telemetry.TrackTrace("Consumer::"+message, telemetry.Error, map[string]string{"Error": err.Error()})
+	telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": message})
 }

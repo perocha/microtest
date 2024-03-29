@@ -99,5 +99,5 @@ func main() {
 		telemetry.Information, map[string]string{"port": port})
 
 	// Start the server
-	telemetry.TrackException(server.ListenAndServe())
+	telemetry.TrackException(server.ListenAndServe(), telemetry.Error, nil)
 }
