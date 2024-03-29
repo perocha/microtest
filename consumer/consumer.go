@@ -30,40 +30,20 @@ func main() {
 
 // consumeMessages subscribes to the event hub and consumes messages
 func consumeMessages(partitionID string) error {
+	// Create a channel to receive messages
 	messages := make(chan messaging.Message)
-	bufferSize := 100 // Set an appropriate buffer size
-
-	// Separate goroutine for message processing
-	go func() {
-		// Create a buffer to temporarily store messages
-		messageBuffer := make([]messaging.Message, 0, bufferSize)
-
-		for msg := range messages {
-			// Add the message to the buffer
-			messageBuffer = append(messageBuffer, msg)
-
-			// Check if the buffer is full
-			if len(messageBuffer) >= bufferSize {
-				// Process the buffered messages
-				for _, bufferedMsg := range messageBuffer {
-					processMessage(bufferedMsg)
-				}
-				// Clear the buffer
-				messageBuffer = nil
-			}
-		}
-
-		// Process any remaining messages in the buffer
-		for _, bufferedMsg := range messageBuffer {
-			processMessage(bufferedMsg)
-		}
-	}()
 
 	// Subscribe to messages on the specified partition
 	err := messaging.EventHubInstance.ListenForMessages("Consumer", partitionID, messages)
 	if err != nil {
 		handleError("Failed to subscribe to EventHub", err)
 		return err
+	}
+
+	// Process received messages
+	for msg := range messages {
+		// Execute your business logic for each message
+		processMessage(msg)
 	}
 
 	return nil
