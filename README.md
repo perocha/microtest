@@ -28,15 +28,18 @@ In folder k8s you'll find the Kubernetes deployment files:
 
 # Cross cutting features
 
-In folder "common" there are several cross-cutting features that each microservice can use. This includes telemetry, messaging and will be expanded based on the needs.
-
 ## Telemetry
 
-The telemetry is handled by package telemetry.go. I'm using App Insights to trace all microservice actions.
+The telemetry is handled by package telemetry.go (folder telemetry). I'm using App Insights to trace all microservice actions.
+
+The application map in App Insights will show the relationship between the publisher and consumer services.
+
+![alt text](image.png)
 
 ## Messaging
 
-// TODO The messaging is handled by package messaging.go
+The messaging to event hubs is handled by package messaging.go (folder messaging).
+It implements both publish and subscribe methods using the Azure SDK for Go.
 
 ## Configuration
 
