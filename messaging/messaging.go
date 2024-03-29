@@ -91,6 +91,7 @@ func (e *EventHub) Subscribe(serviceName string, handler func(Message)) error {
 		return err
 	}
 
+	// For each partition, receive the message
 	for _, partitionID := range info.PartitionIDs {
 		// Receive the message from the EventHub
 		_, err := e.Hub.Receive(ctx, partitionID, func(ctx context.Context, event *eventhub.Event) error {
