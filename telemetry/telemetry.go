@@ -95,7 +95,7 @@ func TrackDependency(
 	properties map[string]string,
 ) {
 	// Create more descriptive information to trace, with the caller name and the dependency data
-	dependencyText := dependencyName + dependencyData
+	dependencyText := dependencyName + "::" + dependencyData
 
 	dependency := appinsights.NewRemoteDependencyTelemetry(dependencyText, dependencyType, dependencyTarget, dependencySuccess)
 	dependency.Data = dependencyData
