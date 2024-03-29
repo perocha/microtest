@@ -3,6 +3,7 @@ package messaging
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"strings"
 	"time"
 
@@ -217,6 +218,8 @@ func (e *EventHub) ListenForMessages(serviceName string, partitionID string, mes
 		// Send the message to the consumer
 		select {
 		case messages <- msg:
+			// Successfully received message, log to App Insights
+			telemetry.TrackDependency("Successfully received message id "+msg.MessageId+" from event hub from partition id "+partitionID, serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"partitionId": partitionID, "content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))})
 		default:
 			// If the messages channel is full, you can choose to handle this case as needed
 			telemetry.TrackDependency("Messages channel is full. Dropping message.", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), nil)

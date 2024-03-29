@@ -82,6 +82,7 @@ func main() {
 	}
 }
 
+// consumeMessages subscribes to the event hub and consumes messages
 func consumeMessages(partitionID string) error {
 	// Create a channel to receive messages
 	messages := make(chan messaging.Message)
@@ -89,6 +90,7 @@ func consumeMessages(partitionID string) error {
 	// Subscribe to messages on the specified partition
 	err := messaging.EventHubInstance.ListenForMessages("Consumer", partitionID, messages)
 	if err != nil {
+		handleError("Failed to subscribe to EventHub", err)
 		return err
 	}
 
@@ -101,13 +103,13 @@ func consumeMessages(partitionID string) error {
 	return nil
 }
 
+// processMessage is the business logic that processes the message
 func processMessage(msg messaging.Message) {
-	// Implement your business logic here
-	// For example:
 	// Log the event to App Insights
 	telemetry.TrackTrace("Consumer::processMessage", telemetry.Information, map[string]string{"payload": msg.Payload, "messageId": msg.MessageId})
 }
 
+// handleError logs the error message and error to App Insights
 func handleError(message string, err error) {
 	// Log the error using telemetry
 	telemetry.TrackTrace("Consumer::"+message, telemetry.Error, map[string]string{"Error": err.Error()})
