@@ -171,7 +171,7 @@ func (e *EventHub) GetMessage(serviceName string) (Message, error) {
 				}
 
 				// Successfully received message, log to App Insights
-				telemetry.TrackDependency("Successfully received message from event hub from partition id "+partitionID, serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"partitionId": partitionID, "content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))})
+				telemetry.TrackDependency("Successfully received message id "+msg.MessageId+" from event hub from partition id "+partitionID, serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"partitionId": partitionID, "content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))})
 
 				msgChan <- msg
 				return nil

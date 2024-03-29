@@ -8,6 +8,7 @@ import (
 	"github.com/microtest/telemetry"
 )
 
+/*
 // Method consumeMessages subscribes to the event hub and consumes messages
 func consumeMessages() {
 	// Subscribe to the event hub
@@ -21,6 +22,7 @@ func consumeMessages() {
 		telemetry.TrackTrace("Consumer::Failed to subscribe to EventHub", telemetry.Error, map[string]string{"Error": err.Error()})
 	}
 }
+*/
 
 // New consume method that gets one message from eventhub and returns, so we can do something with the message
 func consumeMessage() {
