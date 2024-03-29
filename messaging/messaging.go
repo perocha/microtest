@@ -90,7 +90,6 @@ func (e *EventHub) Publish(serviceName string, msg Message) error {
 	return errHub
 }
 
-/*
 // ListenForMessages starts listening for messages on the provided hub and partition
 func (e *EventHub) ListenForMessages(serviceName string, partitionID string, messages chan<- Message) error {
 	startTime := time.Now()
@@ -128,40 +127,4 @@ func (e *EventHub) ListenForMessages(serviceName string, partitionID string, mes
 	}
 
 	return err
-}
-*/
-
-// ListenForMessages fetches and returns one message from the event hub.
-func (e *EventHub) ListenForMessages(serviceName string, partitionID string) (Message, error) {
-	startTime := time.Now()
-
-	// Create a new context for the message and receive it
-	ctx := context.Background()
-
-	var msg Message
-
-	// Start receiving messages from the specified partition
-	_, err := e.Hub.Receive(ctx, partitionID, func(ctx context.Context, event *eventhub.Event) error {
-		// Unmarshal the JSON message received
-		err := json.Unmarshal(event.Data, &msg)
-		if err != nil {
-			// Log the error using telemetry.TrackDependency
-			telemetry.TrackDependency("Failed to unmarshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
-			return err
-		}
-
-		// Successfully received message, log to App Insights
-		telemetry.TrackDependency("Successfully received message id "+msg.MessageId+" from event hub from partition id "+partitionID, serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"partitionId": partitionID, "content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))})
-
-		// Stop listening for more messages after receiving one
-		return nil
-	})
-
-	if err != nil {
-		// Log the error using telemetry.TrackDependency
-		telemetry.TrackDependency("Error receiving message from partition", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
-		return Message{}, err
-	}
-
-	return msg, nil
 }

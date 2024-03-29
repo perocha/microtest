@@ -30,15 +30,21 @@ func main() {
 
 // consumeMessages subscribes to the event hub and consumes messages
 func consumeMessages(partitionID string) error {
+	// Create a channel to receive messages
+	messages := make(chan messaging.Message)
+
 	// Subscribe to messages on the specified partition
-	msg, err := messaging.EventHubInstance.ListenForMessages("Consumer", partitionID)
+	err := messaging.EventHubInstance.ListenForMessages("Consumer", partitionID, messages)
 	if err != nil {
 		handleError("Failed to subscribe to EventHub", err)
 		return err
 	}
 
-	// Execute your business logic for the message
-	processMessage(msg)
+	// Process received messages
+	for msg := range messages {
+		// Execute your business logic for each message
+		processMessage(msg)
+	}
 
 	return nil
 }
