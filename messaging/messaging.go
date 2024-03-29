@@ -3,7 +3,7 @@ package messaging
 import (
 	"context"
 	"encoding/json"
-	"strconv"
+	"fmt"
 	"strings"
 	"time"
 
@@ -90,6 +90,7 @@ func (e *EventHub) Publish(serviceName string, msg Message) error {
 	return errHub
 }
 
+/*
 // Subscribe listens for messages on the EventHub
 func (e *EventHub) Subscribe(serviceName string, handler func(Message)) error {
 	startTime := time.Now()
@@ -178,4 +179,45 @@ func (e *EventHub) GetMessage(serviceName string, partitionID string) (Message, 
 	case err := <-errChan:
 		return Message{}, err
 	}
+}
+*/
+
+type Receiver struct {
+	hub *eventhub.Hub
+}
+
+// NewReceiver initializes a new Receiver instance
+func NewReceiver(connectionString string) (*Receiver, error) {
+	// Initialize the Event Hub
+	hub, err := eventhub.NewHubFromConnectionString(connectionString)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Receiver{hub: hub}, nil
+}
+
+// ListenForMessages starts listening for messages on the provided hub and partition
+func ListenForMessages(serviceName string, partitionID string) <-chan Message {
+	messages := make(chan Message)
+
+	handler := func(ctx context.Context, event *eventhub.Event) error {
+		text := string(event.Data)
+		message := Message{
+			Payload:   text,
+			MessageId: event.ID,
+		}
+		messages <- message
+		return nil
+	}
+
+	go func() {
+		defer close(messages)
+		_, err := EventHubInstance.Hub.Receive(context.Background(), partitionID, handler, eventhub.ReceiveWithLatestOffset())
+		if err != nil {
+			fmt.Println("Error: ", err)
+		}
+	}()
+
+	return messages
 }
