@@ -22,6 +22,19 @@ func consumeMessages() {
 	}
 }
 
+// New consume method that gets one message from eventhub and returns, so we can do something with the message
+func consumeMessage() {
+	// Get one message from the event hub
+	msg, err := messaging.EventHubInstance.GetMessage("Consumer get message")
+	if err != nil {
+		telemetry.TrackTrace("Consumer::Failed to get message from EventHub", telemetry.Error, map[string]string{"Error": err.Error()})
+		return
+	}
+
+	// Log the event to App Insights
+	telemetry.TrackTrace("Consumer::Message received from EventHub", telemetry.Information, map[string]string{"payload": msg.Payload, "messageId": msg.MessageId})
+}
+
 func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry("Consumer")
@@ -34,7 +47,8 @@ func main() {
 	}
 
 	// Start consuming messages
-	consumeMessages()
+	//	consumeMessages()
+	consumeMessage()
 
 	// Keep the service running
 	for {
