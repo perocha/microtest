@@ -46,12 +46,12 @@ func main() {
 		telemetry.TrackTrace("Consumer::Failed to initialize EventHub", telemetry.Error, map[string]string{"Error": err.Error()})
 	}
 
-	// Start consuming messages
-	//	consumeMessages()
-	consumeMessage()
-
 	// Keep the service running
 	for {
+		// Start consuming messages
+		//	consumeMessages()
+		consumeMessage()
+
 		time.Sleep(time.Second)
 	}
 }
