@@ -136,53 +136,40 @@ func (e *EventHub) Subscribe(serviceName string, handler func(Message)) error {
 	return err
 }
 
-// GetMessage listens for a single message on the EventHub and returns it
-func (e *EventHub) GetMessage(serviceName string) (Message, error) {
+// GetMessage listens for a single message on the EventHub from a specific partition and returns it
+func (e *EventHub) GetMessage(serviceName string, partitionID string) (Message, error) {
 	startTime := time.Now()
 
 	// Create a new context for the message and receive it
 	ctx := context.Background()
 
-	// Get the runtime information of the EventHub
-	info, err := e.Hub.GetRuntimeInformation(ctx)
-	if err != nil {
-		// Failed to get runtime information, log dependency failure to App Insights
-		telemetry.TrackDependency("Failed to get runtime information", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()})
-		return Message{}, err
-	}
-
 	// Create a channel to receive messages
 	msgChan := make(chan Message, 1)
 	errChan := make(chan error, 1)
 
-	// For each partition, receive the message
-	for _, partitionID := range info.PartitionIDs {
-		go func(partitionID string) {
-			// Receive the message from the EventHub
-			_, err := e.Hub.Receive(ctx, partitionID, func(ctx context.Context, event *eventhub.Event) error {
-				// Unmarshal the JSON message received
-				var msg Message
-				err := json.Unmarshal(event.Data, &msg)
-				if err != nil {
-					// Failed to unmarshal message, log dependency failure to App Insights
-					telemetry.TrackDependency("Failed to unmarshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
-					errChan <- err
-					return err
-				}
+	// Receive the message from the EventHub
+	_, err := e.Hub.Receive(ctx, partitionID, func(ctx context.Context, event *eventhub.Event) error {
+		// Unmarshal the JSON message received
+		var msg Message
+		err := json.Unmarshal(event.Data, &msg)
+		if err != nil {
+			// Failed to unmarshal message, log dependency failure to App Insights
+			telemetry.TrackDependency("Failed to unmarshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
+			errChan <- err
+			return err
+		}
 
-				// Successfully received message, log to App Insights
-				telemetry.TrackDependency("Successfully received message id "+msg.MessageId+" from event hub from partition id "+partitionID, serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"partitionId": partitionID, "content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))})
+		// Successfully received message, log to App Insights
+		telemetry.TrackDependency("Successfully received message id "+msg.MessageId+" from event hub from partition id "+partitionID, serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"partitionId": partitionID, "content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))})
 
-				msgChan <- msg
-				return nil
-			})
+		msgChan <- msg
+		return nil
+	})
 
-			if err != nil {
-				// Failed to receive message
-				telemetry.TrackDependency("Failed to receive message from event hub", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
-				errChan <- err
-			}
-		}(partitionID)
+	if err != nil {
+		// Failed to receive message
+		telemetry.TrackDependency("Failed to receive message from event hub", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
+		errChan <- err
 	}
 
 	select {

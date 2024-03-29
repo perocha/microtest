@@ -25,9 +25,9 @@ func consumeMessages() {
 */
 
 // New consume method that gets one message from eventhub and returns, so we can do something with the message
-func consumeMessage() {
+func consumeMessage(partitionID string) {
 	// Get one message from the event hub
-	msg, err := messaging.EventHubInstance.GetMessage("Consumer get message")
+	msg, err := messaging.EventHubInstance.GetMessage("Consumer get message", partitionID)
 	if err != nil {
 		telemetry.TrackTrace("Consumer::Failed to get message from EventHub", telemetry.Error, map[string]string{"Error": err.Error()})
 		return
@@ -52,7 +52,8 @@ func main() {
 	for {
 		// Start consuming messages
 		//	consumeMessages()
-		consumeMessage()
+		partitionID := "0"
+		consumeMessage(partitionID)
 
 		time.Sleep(time.Second)
 	}
