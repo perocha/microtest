@@ -3,7 +3,6 @@ package messaging
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -199,6 +198,8 @@ func NewReceiver(connectionString string) (*Receiver, error) {
 
 // ListenForMessages starts listening for messages on the provided hub and partition
 func ListenForMessages(serviceName string, partitionID string) <-chan Message {
+	startTime := time.Now()
+
 	messages := make(chan Message)
 
 	handler := func(ctx context.Context, event *eventhub.Event) error {
@@ -215,7 +216,7 @@ func ListenForMessages(serviceName string, partitionID string) <-chan Message {
 		defer close(messages)
 		_, err := EventHubInstance.Hub.Receive(context.Background(), partitionID, handler, eventhub.ReceiveWithLatestOffset())
 		if err != nil {
-			fmt.Println("Error: ", err)
+			telemetry.TrackDependency("Error", serviceName, "EventHub", "event hub name", false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
 		}
 	}()
 
