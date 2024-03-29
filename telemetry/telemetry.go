@@ -72,20 +72,7 @@ func TrackException(err error) {
 }
 
 // Sends a trace message to App Insights
-func TrackTrace(data TelemetryData) {
-	if client == nil {
-		log.Printf("Message: %s, Properties: %v\n", data.Message, data.Properties)
-		return
-	}
-
-	trace := appinsights.NewTraceTelemetry(data.Message, data.Severity)
-	for k, v := range data.Properties {
-		trace.Properties[k] = v
-	}
-	client.Track(trace)
-}
-
-func TrackTraceTest(Message string, Severity contracts.SeverityLevel, Properties map[string]string) {
+func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map[string]string) {
 	if client == nil {
 		log.Printf("Message: %s, Properties: %v, Severity: %v\n", Message, Properties, Severity)
 		return

@@ -31,44 +31,32 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Publish messages
+	// Publish X number of messages, based on the count received in the POST request
 	for i := 0; i < message.Count; i++ {
-		// Create a new UUID for the message
+		// Create a unique UUID for each message sent to event hub
 		messageID := uuid.New().String()
 
-		// Create a new message to be sent to the event hub
+		// Create a new message to be sent to the event hub (with payload received in POST and the unique message id)
 		msg := messaging.Message{
 			Payload:   message.Content,
 			MessageId: messageID,
 		}
 
 		// Log the event to App Insights
-		telemetryData := telemetry.TelemetryData{
-			Message: "Publisher::Message received, will publish message to EventHub (messageID: " + messageID + ")",
-			Properties: map[string]string{
-				"messageId": messageID,
-				"content":   message.Content,
-				"count":     strconv.Itoa(message.Count),
-			},
-			Severity: telemetry.Information,
-		}
-		telemetry.TrackTrace(telemetryData)
+		telemetry.TrackTrace("Publisher::Message received, will publish message to EventHub (messageID: "+messageID+")",
+			telemetry.Information, map[string]string{"messageId": messageID, "content": message.Content, "count": strconv.Itoa(message.Count)})
 
 		// Publish the message to event hub
 		err = messaging.EventHubInstance.Publish("Publisher", msg)
+
 		if err != nil {
-			telemetryData := telemetry.TelemetryData{
-				Message: "Publisher::Failed to publish message: " + messageID + ")",
-				Properties: map[string]string{
-					"Error": err.Error(),
-				},
-				Severity: telemetry.Error,
-			}
-			telemetry.TrackTrace(telemetryData)
+			// Failed to publish message, log the error to App Insights
+			telemetry.TrackTrace("Publisher::Failed to publish message: "+messageID+")",
+				telemetry.Error, map[string]string{"Error": err.Error()})
 		}
 	}
 
-	// Track the request to App Insights
+	// Everything was OK, track the "request" call trace to App Insights
 	requestTelemetryData := telemetry.RequestTelemetryData{
 		Name:         r.URL.Path,
 		Url:          r.URL.String(),
@@ -91,14 +79,9 @@ func main() {
 	eventHubConnectionString := os.Getenv("EVENTHUB_PUBLISHER_CONNECTION_STRING")
 	err := messaging.NewEventHub("Publisher", eventHubConnectionString)
 	if err != nil {
-		telemetryData := telemetry.TelemetryData{
-			Message: "Publisher::Failed to initialize EventHub",
-			Properties: map[string]string{
-				"Error": err.Error(),
-			},
-			Severity: telemetry.Error,
-		}
-		telemetry.TrackTrace(telemetryData)
+		// Failed to initialize EventHub, log the error to App Insights
+		telemetry.TrackTrace("Publisher::Failed to initialize EventHub",
+			telemetry.Error, map[string]string{"Error": err.Error()})
 	}
 
 	// Create a new router
@@ -119,15 +102,10 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	// Log the event to App Insights
-	telemetryData := telemetry.TelemetryData{
-		Message: "Publisher::ServerStarted on port " + port,
-		Properties: map[string]string{
-			"port": port,
-		},
-		Severity: telemetry.Information,
-	}
-	telemetry.TrackTrace(telemetryData)
+	// Server started in the specified port, log to App Insights
+	telemetry.TrackTrace("Publisher::ServerStarted on port "+port,
+		telemetry.Information, map[string]string{"port": port})
 
+	// Start the server
 	telemetry.TrackException(server.ListenAndServe())
 }

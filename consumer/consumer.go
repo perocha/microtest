@@ -13,35 +13,12 @@ func consumeMessages() {
 	// Subscribe to the event hub
 	err := messaging.EventHubInstance.Subscribe("Consumer", func(msg messaging.Message) {
 		// Log the event to App Insights
-		telemetry.TrackTraceTest("Consumer::Message received from EventHub", telemetry.Information, map[string]string{"payload": msg.Payload, "messageId": msg.MessageId})
-
-		/*
-			telemetryData := telemetry.TelemetryData{
-				Message: "Consumer::Message received from EventHub",
-				Properties: map[string]string{
-					"payload":   msg.Payload,
-					"messageId": msg.MessageId,
-				},
-				Severity: telemetry.Information,
-			}
-			telemetry.TrackTrace(telemetryData)
-		*/
+		telemetry.TrackTrace("Consumer::Message received from EventHub", telemetry.Information, map[string]string{"payload": msg.Payload, "messageId": msg.MessageId})
 	})
 
 	// Check if there was an error subscribing to the event hub
 	if err != nil {
-		telemetry.TrackTraceTest("Consumer::Failed to subscribe to EventHub", telemetry.Error, map[string]string{"Error": err.Error()})
-
-		/*
-			telemetryData := telemetry.TelemetryData{
-				Message: "Consumer::Failed to subscribe to EventHub",
-				Properties: map[string]string{
-					"Error": err.Error(),
-				},
-				Severity: telemetry.Error,
-			}
-			telemetry.TrackTrace(telemetryData)
-		*/
+		telemetry.TrackTrace("Consumer::Failed to subscribe to EventHub", telemetry.Error, map[string]string{"Error": err.Error()})
 	}
 }
 
@@ -53,17 +30,7 @@ func main() {
 	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMER_CONNECTION_STRING")
 	err := messaging.NewEventHub("Consumer", eventHubConnectionString)
 	if err != nil {
-		telemetry.TrackTraceTest("Consumer::Failed to initialize EventHub", telemetry.Error, map[string]string{"Error": err.Error()})
-		/*
-			telemetryData := telemetry.TelemetryData{
-				Message: "Consumer::Failed to initialize EventHub",
-				Properties: map[string]string{
-					"Error": err.Error(),
-				},
-				Severity: telemetry.Error,
-			}
-			telemetry.TrackTrace(telemetryData)
-		*/
+		telemetry.TrackTrace("Consumer::Failed to initialize EventHub", telemetry.Error, map[string]string{"Error": err.Error()})
 	}
 
 	// Start consuming messages
