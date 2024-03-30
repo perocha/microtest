@@ -3,13 +3,19 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/microtest/messaging"
 	"github.com/microtest/telemetry"
 )
 
-const SERVICE_NAME = "Consumer"
-const NUM_PARTITIONS = 4
+const (
+	SERVICE_NAME   = "Consumer"
+	leaseDuration  = 30 * time.Second
+	NUM_PARTITIONS = 4
+	maxRetries     = 3
+	backoffDelay   = 5 * time.Second
+)
 
 func main() {
 	// Initialize telemetry
@@ -34,24 +40,32 @@ func main() {
 	fmt.Println("Consumer::After creating lease manager")
 
 	if err != nil {
-		fmt.Println("Consumer::Failed to initialize LeaseManager 1::", err)
 		handleError("Consumer::Failed to initialize LeaseManager", err)
-		fmt.Println("Consumer::Failed to initialize LeaseManager 2::", err)
 		return
 	}
 
-	// Define lease duration
-	leaseDuration := int32(30) // Adjust lease duration as needed
-
-	// Acquire leases for each partition
+	// Try to acquire a lease from each partition
 	for i := 0; i < NUM_PARTITIONS; i++ {
-		partitionID, err := messaging.AcquireLease(leaseManager, NUM_PARTITIONS, leaseDuration)
+		retries := 0
+		var partitionID string
 
-		fmt.Println("Consumer::After acquiring lease")
+		for retries < maxRetries {
+			var err error
+			partitionID, err = messaging.AcquireLease(leaseManager, NUM_PARTITIONS, int32(leaseDuration.Seconds()))
 
-		if err != nil {
-			fmt.Println("Consumer::Failed to acquire lease::", err)
+			fmt.Println("Consumer::After acquiring lease")
+
+			if err == nil {
+				break
+			}
+
 			handleError("Consumer::Failed to acquire lease", err)
+			time.Sleep(backoffDelay)
+			retries++
+		}
+
+		if retries == maxRetries {
+			handleError("Consumer::Failed to acquire lease after max retries", err)
 			return
 		}
 
