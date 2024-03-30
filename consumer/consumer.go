@@ -29,15 +29,19 @@ func main() {
 	storageConnectionString := os.Getenv("STORAGE_CONNECTION_STRING")
 	partitionLeaseContainer := os.Getenv("PARTITION_LEASE_CONTAINER")
 
-	fmt.Println("After getting env vars")
+	fmt.Println("Print env variables")
+	fmt.Println(accountName)
+	fmt.Println(storageConnectionString)
+	fmt.Println(partitionLeaseContainer)
 
 	leaseManager, err := messaging.NewLeaseManager(accountName, storageConnectionString, partitionLeaseContainer)
 
 	fmt.Println("After creating lease manager")
 
 	if err != nil {
-		fmt.Println("Failed to initialize LeaseManager")
+		fmt.Println("Failed to initialize LeaseManager 1::", err)
 		handleError("Failed to initialize LeaseManager", err)
+		fmt.Println("Failed to initialize LeaseManager 2::", err)
 		return
 	}
 
@@ -99,5 +103,6 @@ func processMessage(msg messaging.Message) {
 // handleError logs the error message and error to App Insights
 func handleError(message string, err error) {
 	// Log the error using telemetry
+	fmt.Println("handleError::Error: ", err)
 	telemetry.TrackException(err, telemetry.Error, map[string]string{"Client": SERVICE_NAME, "Error": err.Error(), "Message": message})
 }
