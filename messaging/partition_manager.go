@@ -24,7 +24,7 @@ type LeaseManager struct {
 func NewBlobStorage(accountName, accountKey, containerName string) (*BlobStorage, error) {
 	// Ensure account name, account key, and container name are provided
 	if accountName == "" || accountKey == "" || containerName == "" {
-		handleError("PartitionManager::NewBlobStorage::Missing required parameters", errors.New("missing required parameters"))
+		telemetry.TrackTrace("PartitionManager::NewBlobStorage::Missing required parameters", telemetry.Error, nil)
 		return nil, errors.New("missing required parameters")
 	}
 
@@ -36,7 +36,7 @@ func NewBlobStorage(accountName, accountKey, containerName string) (*BlobStorage
 	// Create Blob Storage client
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
-		handleError("PartitionManager::NewBlobStorage::Failed to create shared key credential", err)
+		telemetry.TrackTrace("PartitionManager::NewBlobStorage::Failed to create shared key credential", telemetry.Error, nil)
 		return nil, err
 	}
 
@@ -97,7 +97,7 @@ func NewLeaseManager(accountName, accountKey, containerName string) (*LeaseManag
 	blobStorage, err := NewBlobStorage(accountName, accountKey, containerName)
 
 	if err != nil {
-		handleError("PartitionMgr::NewLeaseManager::Failed to create Blob Storage client", err)
+		telemetry.TrackTrace("PartitionMgr::NewLeaseManager::Failed to create Blob Storage client", telemetry.Error, map[string]string{"Error": err.Error()})
 		return nil, err
 	}
 
@@ -124,7 +124,7 @@ func AcquireLease(lm *LeaseManager, numPartitions int, leaseDuration int32) (str
 	leaseID := "lease-" + partitionID
 	_, err := blobURL.AcquireLease(context.Background(), leaseID, leaseDuration, azblob.ModifiedAccessConditions{})
 	if err != nil {
-		handleError("PartitionMgr::AcquireLease::Error acquiring lease", err)
+		telemetry.TrackTrace("PartitionMgr::AcquireLease::Error acquiring lease", telemetry.Error, map[string]string{"Error": err.Error()})
 		return "", err
 	}
 

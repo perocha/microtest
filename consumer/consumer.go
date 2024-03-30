@@ -57,7 +57,7 @@ func main() {
 			}
 
 			// Log the error and retry after a delay
-			telemetry.TrackTrace("Consumer::AcquireLease::Retrying after delay", telemetry.Information, map[string]string{"retries": strconv.Itoa(retries)})
+			telemetry.TrackTrace("Consumer::AcquireLease::Retrying after delay", telemetry.Error, map[string]string{"retries": strconv.Itoa(retries)})
 			time.Sleep(CustomIncrementalDelay(backoffDelay, retries))
 			retries++
 		}
@@ -116,6 +116,6 @@ func handleError(message string, err error) {
 
 // CustomIncrementalDelay generates an incremental delay based on the current delay and retry count.
 func CustomIncrementalDelay(currentDelay time.Duration, retry int) time.Duration {
-	incrementFactor := 2
+	incrementFactor := 10
 	return currentDelay * time.Duration(incrementFactor)
 }
