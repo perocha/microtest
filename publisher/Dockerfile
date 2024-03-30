@@ -20,7 +20,6 @@ RUN go mod download
 COPY ./publisher .
 COPY ./messaging ./messaging
 COPY ./telemetry ./telemetry
-COPY ./storage ./storage
 
 # Build the Go app
 RUN go build -o publisher .

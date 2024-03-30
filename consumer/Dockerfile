@@ -20,7 +20,6 @@ RUN go mod download
 COPY ./consumer .
 COPY ./messaging ./messaging
 COPY ./telemetry ./telemetry
-COPY ./storage ./storage
 
 # Build the Go app
 RUN go build -o consumer .
