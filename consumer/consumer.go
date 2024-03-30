@@ -46,13 +46,19 @@ func main() {
 	// Acquire leases for each partition
 	for i := 0; i < NUM_PARTITIONS; i++ {
 		partitionID, err := messaging.AcquireLease(leaseManager, NUM_PARTITIONS, leaseDuration)
+
+		fmt.Println("After acquiring lease")
+
 		if err != nil {
+			fmt.Println("Failed to acquire lease::", err)
 			handleError("Failed to acquire lease", err)
 			return
 		}
 
+		fmt.Println("Acquired lease for partition:", partitionID)
+
 		// Start consuming messages from the assigned partition
-		go consumeMessages(partitionID)
+		consumeMessages(partitionID)
 	}
 
 	// Keep the main goroutine running to allow consumer pods to run in the background
@@ -89,6 +95,7 @@ func processMessage(msg messaging.Message) {
 // handleError logs the error message and error to App Insights
 func handleError(message string, err error) {
 	// Log the error using telemetry
-	fmt.Println("handleError::Error: ", err)
+	fmt.Println("Consumer::handleError::Message: ", message)
+	fmt.Println("Consumer::handleError::Error: ", err)
 	telemetry.TrackException(err, telemetry.Error, map[string]string{"Client": SERVICE_NAME, "Error": err.Error(), "Message": message})
 }
