@@ -116,6 +116,6 @@ func handleError(message string, err error) {
 
 // CustomIncrementalDelay generates an incremental delay based on the current delay and retry count.
 func CustomIncrementalDelay(currentDelay time.Duration, retry int) time.Duration {
-	incrementFactor := 10
+	incrementFactor := 2 * retry
 	return currentDelay * time.Duration(incrementFactor)
 }
