@@ -19,11 +19,11 @@ func main() {
 	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMER_CONNECTION_STRING")
 	err := messaging.NewEventHub("Consumer initialization", eventHubConnectionString)
 	if err != nil {
-		handleError("Failed to initialize EventHub", err)
+		handleError("Consumer::Failed to initialize EventHub", err)
 		return
 	}
 
-	fmt.Println("Consumer initialized")
+	fmt.Println("Consumer::Consumer initialized")
 
 	// Create a lease manager for partition leasing
 	accountName := os.Getenv("STORAGE_ACCOUNT_NAME")
@@ -31,12 +31,12 @@ func main() {
 	partitionLeaseContainer := os.Getenv("PARTITION_LEASE_CONTAINER")
 	leaseManager, err := messaging.NewLeaseManager(accountName, storageConnectionString, partitionLeaseContainer)
 
-	fmt.Println("After creating lease manager")
+	fmt.Println("Consumer::After creating lease manager")
 
 	if err != nil {
-		fmt.Println("Failed to initialize LeaseManager 1::", err)
-		handleError("Failed to initialize LeaseManager", err)
-		fmt.Println("Failed to initialize LeaseManager 2::", err)
+		fmt.Println("Consumer::Failed to initialize LeaseManager 1::", err)
+		handleError("Consumer::Failed to initialize LeaseManager", err)
+		fmt.Println("Consumer::Failed to initialize LeaseManager 2::", err)
 		return
 	}
 
@@ -47,15 +47,15 @@ func main() {
 	for i := 0; i < NUM_PARTITIONS; i++ {
 		partitionID, err := messaging.AcquireLease(leaseManager, NUM_PARTITIONS, leaseDuration)
 
-		fmt.Println("After acquiring lease")
+		fmt.Println("Consumer::After acquiring lease")
 
 		if err != nil {
-			fmt.Println("Failed to acquire lease::", err)
-			handleError("Failed to acquire lease", err)
+			fmt.Println("Consumer::Failed to acquire lease::", err)
+			handleError("Consumer::Failed to acquire lease", err)
 			return
 		}
 
-		fmt.Println("Acquired lease for partition:", partitionID)
+		fmt.Println("Consumer::Acquired lease for partition:", partitionID)
 
 		// Start consuming messages from the assigned partition
 		consumeMessages(partitionID)
@@ -73,7 +73,7 @@ func consumeMessages(partitionID string) error {
 	// Subscribe to messages on the specified partition
 	err := messaging.EventHubInstance.ListenForMessages("Consumer", partitionID, messages)
 	if err != nil {
-		handleError("Failed to subscribe to EventHub", err)
+		handleError("Consumer::Failed to subscribe to EventHub", err)
 		return err
 	}
 
