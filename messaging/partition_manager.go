@@ -91,6 +91,7 @@ func NewLeaseManager(accountName, accountKey, containerName string) (*LeaseManag
 	fmt.Println("PartitionMgr::After creating blob storage")
 
 	if err != nil {
+		fmt.Println("PartitionMgr::Error creating blob storage: ", err)
 		return nil, err
 	}
 
