@@ -70,3 +70,11 @@ kubectl create secret generic eventhubconsumer --from-literal=eventhubconsumerco
 // TODO: Currently these environment variables are set in K8S deployment file (publisher-deployment.yaml). This is not ideal and should be managed in a more dynamic way.
 // TODO: move this configuration to App Config service in Azure. How to dynamically configure PORT in publisher-service?
 
+
+### Partition lease process
+
+The consumer service uses a partition lease process to manage the partitions in EventHubs. The consumer service will lease a partition and process the messages in that partition, each POD will get a partition assigned.
+
+I'm using storage account to store the lease information. The lease is a blob file that contains the partition id and the offset of the last message processed.
+
+Blob name: partitionlease
