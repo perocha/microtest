@@ -27,6 +27,11 @@ func NewBlobStorage(accountName, accountKey, containerName string) (*BlobStorage
 		return nil, errors.New("missing required parameters")
 	}
 
+	fmt.Println("Print env variables")
+	fmt.Println("STORAGE_ACCOUNT_NAME=", accountName)
+	fmt.Println("STORAGE_CONNECTION_STRING=", accountKey)
+	fmt.Println("PARTITION_LEASE_CONTAINER=", containerName)
+
 	// Create Blob Storage client
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
@@ -118,6 +123,9 @@ func (lm *LeaseManager) AcquireLease(consumerID, numPartitions int, leaseDuratio
 		if err == nil {
 			// Lease acquired successfully
 			return partitionID, nil
+		} else {
+			// Log the error
+			handleError("PartitionMgr::AcquireLease::Error acquiring lease", err)
 		}
 	}
 

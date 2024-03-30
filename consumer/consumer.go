@@ -28,12 +28,6 @@ func main() {
 	accountName := os.Getenv("STORAGE_ACCOUNT_NAME")
 	storageConnectionString := os.Getenv("STORAGE_CONNECTION_STRING")
 	partitionLeaseContainer := os.Getenv("PARTITION_LEASE_CONTAINER")
-
-	fmt.Println("Print env variables")
-	fmt.Println(accountName)
-	fmt.Println(storageConnectionString)
-	fmt.Println(partitionLeaseContainer)
-
 	leaseManager, err := messaging.NewLeaseManager(accountName, storageConnectionString, partitionLeaseContainer)
 
 	fmt.Println("After creating lease manager")
