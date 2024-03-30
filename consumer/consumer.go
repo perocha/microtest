@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/microtest/messaging"
@@ -21,12 +22,21 @@ func main() {
 		return
 	}
 
+	fmt.Println("Consumer initialized")
+
 	// Create a lease manager for partition leasing
 	accountName := os.Getenv("STORAGE_ACCOUNT_NAME")
 	storageConnectionString := os.Getenv("STORAGE_CONNECTION_STRING")
 	partitionLeaseContainer := os.Getenv("PARTITION_LEASE_CONTAINER")
+
+	fmt.Println("After getting env vars")
+
 	leaseManager, err := messaging.NewLeaseManager(accountName, storageConnectionString, partitionLeaseContainer)
+
+	fmt.Println("After creating lease manager")
+
 	if err != nil {
+		fmt.Println("Failed to initialize LeaseManager")
 		handleError("Failed to initialize LeaseManager", err)
 		return
 	}
@@ -34,6 +44,8 @@ func main() {
 	// Define the number of partitions and consumer pods
 	numPartitions := 4
 	numConsumers := 4
+
+	fmt.Println("After defining partitions and consumers")
 
 	// Define lease duration
 	leaseDuration := int32(30) // Adjust lease duration as needed

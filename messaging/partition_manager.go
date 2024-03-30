@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"strconv"
+	"fmt"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 )
@@ -53,20 +54,31 @@ func (bs *BlobStorage) GetCheckpoint(partitionID string) (string, error) {
 	// Get blob URL for checkpoint
 	blobURL := bs.ContainerURL.NewBlockBlobURL(partitionID + ".checkpoint")
 
+	fmt.Println("PartitionMgr::GetCheckpoint::BlobURL: ", blobURL)
+
 	// Download checkpoint from Blob Storage
 	resp, err := blobURL.Download(context.Background(), 0, azblob.CountToEnd, azblob.BlobAccessConditions{}, false, azblob.ClientProvidedKeyOptions{})
 	if err != nil {
+		fmt.Println("PartitionMgr::GetCheckpoint::Error: ", err)
 		return "", err
 	}
+
+	fmt.Println("PartitionMgr::GetCheckpoint::After download")
+
 	bodyStream := resp.Body(azblob.RetryReaderOptions{})
 	defer bodyStream.Close()
+
+	fmt.Println("PartitionMgr::GetCheckpoint::After body stream")
 
 	// Read checkpoint from response body
 	data := make([]byte, resp.ContentLength())
 	_, err = bodyStream.Read(data)
 	if err != nil {
+		fmt.Println("PartitionMgr::GetCheckpoint::Error reading body stream: ", err)
 		return "", err
 	}
+
+	fmt.Println("PartitionMgr::GetCheckpoint::Data: ", string(data))
 
 	return string(data), nil
 }
@@ -75,6 +87,9 @@ func (bs *BlobStorage) GetCheckpoint(partitionID string) (string, error) {
 func NewLeaseManager(accountName, accountKey, containerName string) (*LeaseManager, error) {
 	// Create Blob Storage client
 	blobStorage, err := NewBlobStorage(accountName, accountKey, containerName)
+
+	fmt.Println("PartitionMgr::After creating blob storage")
+
 	if err != nil {
 		return nil, err
 	}
