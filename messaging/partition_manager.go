@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
+	"github.com/microtest/telemetry"
 )
 
 type BlobStorage struct {
@@ -20,11 +21,19 @@ type LeaseManager struct {
 
 // Creates a new BlobStorage instance
 func NewBlobStorage(accountName, accountKey, containerName string) (*BlobStorage, error) {
+	// Ensure account name, account key, and container name are provided
+	if accountName == "" || accountKey == "" || containerName == "" {
+		handleError("PartitionManager::NewBlobStorage::Missing required parameters", errors.New("missing required parameters"))
+		return nil, errors.New("missing required parameters")
+	}
+
 	// Create Blob Storage client
 	credential, err := azblob.NewSharedKeyCredential(accountName, accountKey)
 	if err != nil {
+		handleError("PartitionManager::NewBlobStorage::Failed to create shared key credential", err)
 		return nil, err
 	}
+
 	pipeline := azblob.NewPipeline(credential, azblob.PipelineOptions{})
 	u, _ := url.Parse("https://" + accountName + ".blob.core.windows.net/" + containerName)
 	containerURL := azblob.NewContainerURL(*u, pipeline)
@@ -43,6 +52,7 @@ func (bs *BlobStorage) StoreCheckpoint(partitionID, offset string) error {
 	// Upload checkpoint to Blob Storage
 	_, err := azblob.UploadBufferToBlockBlob(context.Background(), data, blobURL, azblob.UploadToBlockBlobOptions{})
 	if err != nil {
+		handleError("PartitionMgr::StoreCheckpoint::Error uploading checkpoint", err)
 		return err
 	}
 
@@ -54,31 +64,23 @@ func (bs *BlobStorage) GetCheckpoint(partitionID string) (string, error) {
 	// Get blob URL for checkpoint
 	blobURL := bs.ContainerURL.NewBlockBlobURL(partitionID + ".checkpoint")
 
-	fmt.Println("PartitionMgr::GetCheckpoint::BlobURL: ", blobURL)
-
 	// Download checkpoint from Blob Storage
 	resp, err := blobURL.Download(context.Background(), 0, azblob.CountToEnd, azblob.BlobAccessConditions{}, false, azblob.ClientProvidedKeyOptions{})
 	if err != nil {
-		fmt.Println("PartitionMgr::GetCheckpoint::Error: ", err)
+		handleError("PartitionMgr::GetCheckpoint::Error downloading checkpoint", err)
 		return "", err
 	}
 
-	fmt.Println("PartitionMgr::GetCheckpoint::After download")
-
 	bodyStream := resp.Body(azblob.RetryReaderOptions{})
 	defer bodyStream.Close()
-
-	fmt.Println("PartitionMgr::GetCheckpoint::After body stream")
 
 	// Read checkpoint from response body
 	data := make([]byte, resp.ContentLength())
 	_, err = bodyStream.Read(data)
 	if err != nil {
-		fmt.Println("PartitionMgr::GetCheckpoint::Error reading body stream: ", err)
+		handleError("PartitionMgr::GetCheckpoint::Error reading body stream", err)
 		return "", err
 	}
-
-	fmt.Println("PartitionMgr::GetCheckpoint::Data: ", string(data))
 
 	return string(data), nil
 }
@@ -88,11 +90,8 @@ func NewLeaseManager(accountName, accountKey, containerName string) (*LeaseManag
 	// Create Blob Storage client
 	blobStorage, err := NewBlobStorage(accountName, accountKey, containerName)
 
-	fmt.Println("PartitionMgr::After creating blob storage::blobStorage=", blobStorage)
-	fmt.Println("PartitionMgr::After creating blob storage::err=", err)
-
 	if err != nil {
-		fmt.Println("PartitionMgr::Error creating blob storage: ", err)
+		handleError("PartitionMgr::NewLeaseManager::Failed to create Blob Storage client", err)
 		return nil, err
 	}
 
@@ -123,5 +122,15 @@ func (lm *LeaseManager) AcquireLease(consumerID, numPartitions int, leaseDuratio
 	}
 
 	// If no lease can be acquired, return an error
+	handleError("PartitionMgr::AcquireLease::Failed to acquire lease for any partition", errors.New("failed to acquire lease for any partition"))
+
 	return "", errors.New("failed to acquire lease for any partition")
+}
+
+// handleError logs the error message and error to App Insights
+func handleError(message string, err error) {
+	// Log the error using telemetry
+	fmt.Println("PartitionManager::handleError::Message: ", message)
+	fmt.Println("PartitionManager::handleError::Error: ", err)
+	telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": message})
 }
