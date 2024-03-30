@@ -121,7 +121,6 @@ func AcquireLease(lm *LeaseManager, numPartitions int, leaseDuration int32) (str
 
 	// Try to acquire the lease for the partition
 	blobURL := lm.containerURL.NewBlockBlobURL(partitionID)
-	leaseID := partitionID
 	_, err := blobURL.AcquireLease(context.Background(), "", leaseDuration, azblob.ModifiedAccessConditions{})
 	if err != nil {
 		telemetry.TrackTrace("PartitionMgr::AcquireLease::Error acquiring lease", telemetry.Error, map[string]string{"Error": err.Error()})
