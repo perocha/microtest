@@ -4,25 +4,26 @@ import (
 	"os"
 
 	"github.com/microtest/messaging"
-	"github.com/microtest/storage"
 	"github.com/microtest/telemetry"
 )
 
+const SERVICE_NAME = "Consumer"
+
 func main() {
 	// Initialize telemetry
-	telemetry.InitTelemetry("Consumer")
+	telemetry.InitTelemetry(SERVICE_NAME)
 
 	// Initialize a new EventHub instance
 	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMER_CONNECTION_STRING")
-	err := messaging.NewEventHub("Consumer init", eventHubConnectionString)
+	err := messaging.NewEventHub("Consumer initialization", eventHubConnectionString)
 	if err != nil {
 		handleError("Failed to initialize EventHub", err)
 		return
 	}
 
-	// Create a lease manager for partition leasing using Azure Blob Storage
+	// Create a lease manager for partition leasing
 	storageConnectionString := os.Getenv("STORAGE_CONNECTION_STRING")
-	leaseManager, err := storage.NewLeaseManager("Consumer", storageConnectionString, "PartitionLeases")
+	leaseManager, err := messaging.NewLeaseManager(SERVICE_NAME, storageConnectionString, "PartitionLeases")
 	if err != nil {
 		handleError("Failed to initialize LeaseManager", err)
 		return
@@ -84,6 +85,5 @@ func processMessage(msg messaging.Message) {
 // handleError logs the error message and error to App Insights
 func handleError(message string, err error) {
 	// Log the error using telemetry
-	//	telemetry.TrackTrace("Consumer::"+message, telemetry.Error, map[string]string{"Error": err.Error()})
-	telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": message})
+	telemetry.TrackException(err, telemetry.Error, map[string]string{"Client": SERVICE_NAME, "Error": err.Error(), "Message": message})
 }
