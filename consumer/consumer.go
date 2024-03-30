@@ -13,8 +13,8 @@ const (
 	SERVICE_NAME   = "Consumer"
 	leaseDuration  = 30 * time.Second
 	NUM_PARTITIONS = 4
-	maxRetries     = 3
-	backoffDelay   = 5 * time.Second
+	maxRetries     = 5
+	backoffDelay   = 20 * time.Second
 )
 
 func main() {
@@ -65,6 +65,8 @@ func main() {
 		}
 
 		if retries == maxRetries {
+			// Reached max retries, log error and return
+			err := fmt.Errorf("Consumer::Failed to acquire lease after max retries")
 			handleError("Consumer::Failed to acquire lease after max retries", err)
 			return
 		}
