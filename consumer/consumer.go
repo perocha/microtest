@@ -72,7 +72,8 @@ func main() {
 			}
 		}
 
-		fmt.Println("Consumer::Acquired lease for partition:", partitionID)
+		// Lease acquired successfully, log to App Insights
+		telemetry.TrackTrace("Consumer::Acquired lease for partition: "+partitionID, telemetry.Information, map[string]string{"partitionID": partitionID})
 
 		// Start consuming messages from the assigned partition
 		consumeMessages(partitionID)
