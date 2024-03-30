@@ -71,6 +71,7 @@ func (bs *BlobStorage) GetCheckpoint(partitionID string) (string, error) {
 	return string(data), nil
 }
 
+// Creates a new LeaseManager instance
 func NewLeaseManager(accountName, accountKey, containerName string) (*LeaseManager, error) {
 	// Create Blob Storage client
 	blobStorage, err := NewBlobStorage(accountName, accountKey, containerName)
@@ -81,6 +82,7 @@ func NewLeaseManager(accountName, accountKey, containerName string) (*LeaseManag
 	return &LeaseManager{containerURL: blobStorage.ContainerURL}, nil
 }
 
+// Acquires a lease for a partition
 func (lm *LeaseManager) AcquireLease(consumerID, numPartitions int, leaseDuration int32) (string, error) {
 	// Create lease ID based on consumer ID
 	leaseID := "consumer-" + strconv.Itoa(consumerID)

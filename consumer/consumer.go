@@ -22,8 +22,10 @@ func main() {
 	}
 
 	// Create a lease manager for partition leasing
+	accountName := os.Getenv("STORAGE_ACCOUNT_NAME")
 	storageConnectionString := os.Getenv("STORAGE_CONNECTION_STRING")
-	leaseManager, err := messaging.NewLeaseManager(SERVICE_NAME, storageConnectionString, "PartitionLeases")
+	partitionLeaseContainer := os.Getenv("PARTITION_LEASE_CONTAINER")
+	leaseManager, err := messaging.NewLeaseManager(accountName, storageConnectionString, partitionLeaseContainer)
 	if err != nil {
 		handleError("Failed to initialize LeaseManager", err)
 		return
