@@ -57,8 +57,7 @@ func main() {
 			}
 
 			// Log the error and retry after a delay
-			telemetry.TrackTrace("Consumer::AcquireLease::Failed to acquire lease", telemetry.Error, map[string]string{"retries": strconv.Itoa(retries)})
-			t
+			telemetry.TrackTrace("Consumer::AcquireLease::Retrying after delay", telemetry.Information, map[string]string{"retries": strconv.Itoa(retries)})
 			time.Sleep(CustomIncrementalDelay(backoffDelay, retries))
 			retries++
 		}
