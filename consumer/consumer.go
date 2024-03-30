@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/microtest/messaging"
@@ -55,7 +56,9 @@ func main() {
 				break
 			}
 
-			handleError("Consumer::Failed to acquire lease::retries::"+fmt.Sprintf("%d", retries), err)
+			// Log the error and retry after a delay
+			telemetry.TrackTrace("Consumer::AcquireLease::Failed to acquire lease", telemetry.Error, map[string]string{"retries": strconv.Itoa(retries)})
+			t
 			time.Sleep(CustomIncrementalDelay(backoffDelay, retries))
 			retries++
 		}
