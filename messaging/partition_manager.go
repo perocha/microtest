@@ -122,9 +122,10 @@ func (lm *LeaseManager) AcquireLease(consumerID, numPartitions int, leaseDuratio
 	}
 
 	// If no lease can be acquired, return an error
-	handleError("PartitionMgr::AcquireLease::Failed to acquire lease for any partition", errors.New("failed to acquire lease for any partition"))
+	err := errors.New("failed to acquire lease for any partition")
+	handleError("PartitionMgr::AcquireLease::Failed to acquire lease for any partition", err)
 
-	return "", errors.New("failed to acquire lease for any partition")
+	return "", err
 }
 
 // handleError logs the error message and error to App Insights
