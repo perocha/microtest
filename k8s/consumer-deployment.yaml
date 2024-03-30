@@ -26,3 +26,18 @@ spec:
             secretKeyRef:
               name: eventhubconsumer
               key: eventhubconsumerconnectionstring
+        - name: STORAGE_ACCOUNT_NAME
+          valueFrom:
+            secretKeyRef:
+              name: storage
+              key: storageaccountname
+        - name: STORAGE_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: storageconnection
+              key: storageconnectionstring
+        - name: PARTITION_LEASE_CONTAINER
+          valueFrom:
+            secretKeyRef:
+              name: partitionlease
+              key: partitionleasecontainer
