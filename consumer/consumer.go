@@ -37,8 +37,6 @@ func main() {
 	partitionLeaseContainer := os.Getenv("PARTITION_LEASE_CONTAINER")
 	leaseManager, err := messaging.NewLeaseManager(accountName, storageConnectionString, partitionLeaseContainer)
 
-	fmt.Println("Consumer::After creating lease manager")
-
 	if err != nil {
 		handleError("Consumer::Failed to initialize LeaseManager", err)
 		return
@@ -53,14 +51,12 @@ func main() {
 			var err error
 			partitionID, err = messaging.AcquireLease(leaseManager, NUM_PARTITIONS, int32(leaseDuration.Seconds()))
 
-			fmt.Println("Consumer::After acquiring lease")
-
 			if err == nil {
 				break
 			}
 
-			handleError("Consumer::Failed to acquire lease", err)
-			time.Sleep(backoffDelay)
+			handleError("Consumer::Failed to acquire lease::retries::"+fmt.Sprintf("%d", retries), err)
+			time.Sleep(CustomIncrementalDelay(backoffDelay, retries))
 			retries++
 		}
 
@@ -114,4 +110,10 @@ func handleError(message string, err error) {
 	fmt.Println("Consumer::handleError::Message: ", message)
 	fmt.Println("Consumer::handleError::Error: ", err)
 	telemetry.TrackException(err, telemetry.Error, map[string]string{"Client": SERVICE_NAME, "Error": err.Error(), "Message": message})
+}
+
+// CustomIncrementalDelay generates an incremental delay based on the current delay and retry count.
+func CustomIncrementalDelay(currentDelay time.Duration, retry int) time.Duration {
+	incrementFactor := 2
+	return currentDelay * time.Duration(incrementFactor)
 }
