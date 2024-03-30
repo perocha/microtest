@@ -88,7 +88,8 @@ func NewLeaseManager(accountName, accountKey, containerName string) (*LeaseManag
 	// Create Blob Storage client
 	blobStorage, err := NewBlobStorage(accountName, accountKey, containerName)
 
-	fmt.Println("PartitionMgr::After creating blob storage")
+	fmt.Println("PartitionMgr::After creating blob storage::blobStorage=", blobStorage)
+	fmt.Println("PartitionMgr::After creating blob storage::err=", err)
 
 	if err != nil {
 		fmt.Println("PartitionMgr::Error creating blob storage: ", err)
@@ -102,6 +103,11 @@ func NewLeaseManager(accountName, accountKey, containerName string) (*LeaseManag
 func (lm *LeaseManager) AcquireLease(consumerID, numPartitions int, leaseDuration int32) (string, error) {
 	// Create lease ID based on consumer ID
 	leaseID := "consumer-" + strconv.Itoa(consumerID)
+
+	fmt.Println("PartitionMgr::AcquireLease::ConsumerID: ", consumerID)
+	fmt.Println("PartitionMgr::AcquireLease::NumPartitions: ", numPartitions)
+	fmt.Println("PartitionMgr::AcquireLease::LeaseDuration: ", leaseDuration)
+	fmt.Println("PartitionMgr::AcquireLease::LeaseID: ", leaseID)
 
 	// Try to acquire a lease for each partition until success
 	for i := 0; i < numPartitions; i++ {
