@@ -3,9 +3,9 @@ package messaging
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/url"
 	"strconv"
-	"fmt"
 
 	"github.com/Azure/azure-storage-blob-go/azblob"
 )
