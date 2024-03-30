@@ -16,7 +16,8 @@ type BlobStorage struct {
 }
 
 type LeaseManager struct {
-	containerURL azblob.ContainerURL
+	containerURL    azblob.ContainerURL
+	nextPartitionID int
 }
 
 // Creates a new BlobStorage instance
@@ -100,40 +101,35 @@ func NewLeaseManager(accountName, accountKey, containerName string) (*LeaseManag
 		return nil, err
 	}
 
-	return &LeaseManager{containerURL: blobStorage.ContainerURL}, nil
+	return &LeaseManager{
+		containerURL:    blobStorage.ContainerURL,
+		nextPartitionID: 0,
+	}, nil
 }
 
 // Acquires a lease for a partition
-func (lm *LeaseManager) AcquireLease(consumerID, numPartitions int, leaseDuration int32) (string, error) {
-	// Create lease ID based on consumer ID
-	leaseID := "consumer-" + strconv.Itoa(consumerID)
+func AcquireLease(lm *LeaseManager, numPartitions int, leaseDuration int32) (string, error) {
+	// Get the next partition ID to attempt to acquire a lease for
+	partitionID := strconv.Itoa(lm.nextPartitionID)
 
-	fmt.Println("PartitionMgr::AcquireLease::ConsumerID: ", consumerID)
+	// Increment the next partition ID for the next call
+	lm.nextPartitionID = (lm.nextPartitionID + 1) % numPartitions
+
+	fmt.Println("PartitionMgr::AcquireLease::ConsumerID: ", partitionID)
 	fmt.Println("PartitionMgr::AcquireLease::NumPartitions: ", numPartitions)
 	fmt.Println("PartitionMgr::AcquireLease::LeaseDuration: ", leaseDuration)
-	fmt.Println("PartitionMgr::AcquireLease::LeaseID: ", leaseID)
 
-	// Try to acquire a lease for each partition until success
-	for i := 0; i < numPartitions; i++ {
-		partitionID := strconv.Itoa(i)
-		blobURL := lm.containerURL.NewBlockBlobURL(partitionID)
-
-		// Try to acquire the lease
-		_, err := blobURL.AcquireLease(context.Background(), leaseID, leaseDuration, azblob.ModifiedAccessConditions{})
-		if err == nil {
-			// Lease acquired successfully
-			return partitionID, nil
-		} else {
-			// Log the error
-			handleError("PartitionMgr::AcquireLease::Error acquiring lease", err)
-		}
+	// Try to acquire the lease for the partition
+	blobURL := lm.containerURL.NewBlockBlobURL(partitionID)
+	leaseID := "lease-" + partitionID
+	_, err := blobURL.AcquireLease(context.Background(), leaseID, leaseDuration, azblob.ModifiedAccessConditions{})
+	if err != nil {
+		handleError("PartitionMgr::AcquireLease::Error acquiring lease", err)
+		return "", err
 	}
 
-	// If no lease can be acquired, return an error
-	err := errors.New("failed to acquire lease for any partition")
-	handleError("PartitionMgr::AcquireLease::Failed to acquire lease for any partition", err)
-
-	return "", err
+	// Lease acquired successfully
+	return partitionID, nil
 }
 
 // handleError logs the error message and error to App Insights

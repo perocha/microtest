@@ -9,6 +9,7 @@ import (
 )
 
 const SERVICE_NAME = "Consumer"
+const NUM_PARTITIONS = 4
 
 func main() {
 	// Initialize telemetry
@@ -39,28 +40,19 @@ func main() {
 		return
 	}
 
-	// Define the number of partitions and consumer pods
-	numPartitions := 4
-	numConsumers := 4
-
-	fmt.Println("After defining partitions and consumers")
-
 	// Define lease duration
 	leaseDuration := int32(30) // Adjust lease duration as needed
 
-	// Start consumer pods
-	for i := 0; i < numConsumers; i++ {
-		go func(consumerID int) {
-			// Get a lease for an available partition
-			partitionID, err := leaseManager.AcquireLease(consumerID, numPartitions, leaseDuration)
-			if err != nil {
-				handleError("Failed to acquire lease", err)
-				return
-			}
+	// Acquire leases for each partition
+	for i := 0; i < NUM_PARTITIONS; i++ {
+		partitionID, err := messaging.AcquireLease(leaseManager, NUM_PARTITIONS, leaseDuration)
+		if err != nil {
+			handleError("Failed to acquire lease", err)
+			return
+		}
 
-			// Start consuming messages from the assigned partition
-			consumeMessages(partitionID)
-		}(i)
+		// Start consuming messages from the assigned partition
+		go consumeMessages(partitionID)
 	}
 
 	// Keep the main goroutine running to allow consumer pods to run in the background
