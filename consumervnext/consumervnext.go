@@ -28,7 +28,7 @@ func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry(SERVICE_NAME)
 
-	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMER_CONNECTION_STRING")
+	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
 	//	eventHubName := os.Getenv("EVENTHUB_NAME")
 	//	partitionID := os.Getenv("EVENTHUB_PARTITION_ID")
 	eventHubName := "microtest-eventhub2"
