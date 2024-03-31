@@ -34,12 +34,16 @@ func main() {
 	eventHubName := "microtest-eventhub2"
 	partitionID := "0"
 
+	fmt.Println("Consumervnext::EventHubName::", eventHubName)
+	fmt.Println("Consumervnext::PartitionID::", partitionID)
+	fmt.Println("Consumervnext::EventHubConnectionString::", eventHubConnectionString)
+
 	// Create new consumer client using connection string
 	consumerClient, err := azeventhubs.NewConsumerClientFromConnectionString(eventHubConnectionString, eventHubName, azeventhubs.DefaultConsumerGroup, nil)
 
 	if err != nil {
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Failed to create new event hub instance"})
-		fmt.Println("Failed to create new consumer client" + err.Error())
+		fmt.Println("Consumervnext::Failed to create new consumer client::" + err.Error())
 		panic(err)
 	}
 
@@ -53,7 +57,7 @@ func main() {
 
 	if err != nil {
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Failed to create new partition client"})
-		fmt.Println("Failed to create new partition client" + err.Error())
+		fmt.Println("Consumervnext::Failed to create new partition client::" + err.Error())
 		panic(err)
 	}
 
@@ -68,7 +72,7 @@ func main() {
 
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Error receiving events"})
-		fmt.Println("Error receiving events: ", err)
+		fmt.Println("Consumervnext::Error receiving events::", err)
 		panic(err)
 	}
 
@@ -76,10 +80,10 @@ func main() {
 		// We're assuming the Body is a byte-encoded string. EventData.Body supports any payload
 		// that can be encoded to []byte.
 		telemetry.TrackTrace("Event received with body", telemetry.Information, map[string]string{"body": string(event.Body)})
-		fmt.Println("Event received with body: ", string(event.Body))
+		fmt.Println("Consumervnext::Event received with body::", string(event.Body))
 	}
 
 	telemetry.TrackTrace("Done receiving events", telemetry.Information, nil)
-	fmt.Println("Done receiving events")
+	fmt.Println("Consumervnext::Done receiving events")
 
 }
