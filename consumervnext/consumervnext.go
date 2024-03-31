@@ -80,7 +80,7 @@ func createClients(eventHubConnectionString, eventHubName, storageConnectionStri
 	azBlobContainerClient, err := container.NewClientFromConnectionString(storageConnectionString, storageContainerName, nil)
 
 	if err != nil {
-		fmt.Println()
+		fmt.Println("Error creating blob container client::", err)
 		return nil, nil, err
 	}
 
