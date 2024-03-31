@@ -10,6 +10,8 @@ import (
 	"github.com/microtest/telemetry"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs"
+	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs/checkpoints"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
 )
 
 const (
@@ -31,7 +33,10 @@ func main() {
 	fmt.Println("Consumervnext::PartitionID::", partitionID)
 	fmt.Println("Consumervnext::EventHubConnectionString::", eventHubConnectionString)
 
-	consumerClient, err := createClients(eventHubConnectionString, eventHubName)
+	storageConnectionString := os.Getenv("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
+	storageContainerName := "partitionlease"
+
+	consumerClient, checkpointStore, err := createClients(eventHubConnectionString, eventHubName, storageConnectionString, storageContainerName)
 
 	if err != nil {
 		fmt.Println("Error creating consumer client::", err)
@@ -46,7 +51,7 @@ func main() {
 	// processes or even on separate machines. Each one will use the checkpointStore to coordinate
 	// state and ownership, dynamically.
 	fmt.Println("Creating processor")
-	processor, err := azeventhubs.NewProcessor(consumerClient, nil, nil)
+	processor, err := azeventhubs.NewProcessor(consumerClient, checkpointStore, nil)
 
 	if err != nil {
 		fmt.Println("Error creating processor::", err)
@@ -70,7 +75,21 @@ func main() {
 	}
 }
 
-func createClients(eventHubConnectionString, eventHubName string) (*azeventhubs.ConsumerClient, error) {
+func createClients(eventHubConnectionString, eventHubName, storageConnectionString, storageContainerName string) (*azeventhubs.ConsumerClient, azeventhubs.CheckpointStore, error) {
+	// NOTE: the storageContainerName must exist before the checkpoint store can be used.
+	azBlobContainerClient, err := container.NewClientFromConnectionString(storageConnectionString, storageContainerName, nil)
+
+	if err != nil {
+		fmt.Println()
+		return nil, nil, err
+	}
+
+	checkpointStore, err := checkpoints.NewBlobStore(azBlobContainerClient, nil)
+
+	if err != nil {
+		fmt.Println("Error creating checkpoint store::", err)
+		return nil, nil, err
+	}
 
 	consumerClient, err := azeventhubs.NewConsumerClientFromConnectionString(eventHubConnectionString, eventHubName, azeventhubs.DefaultConsumerGroup, nil)
 
@@ -79,7 +98,7 @@ func createClients(eventHubConnectionString, eventHubName string) (*azeventhubs.
 		return nil, err
 	}
 
-	return consumerClient, nil
+	return consumerClient, checkpointStore, nil
 }
 
 func dispatchPartitionClients(processor *azeventhubs.Processor) {
@@ -88,6 +107,7 @@ func dispatchPartitionClients(processor *azeventhubs.Processor) {
 
 		if processorPartitionClient == nil {
 			// Processor has stopped
+			fmt.Println("Processor has stopped")
 			break
 		}
 
@@ -109,17 +129,20 @@ func processEventsForPartition(partitionClient *azeventhubs.ProcessorPartitionCl
 	defer func() {
 		// 3/3 [END] Do cleanup here, like shutting down database clients
 		// or other resources used for processing this partition.
+		fmt.Printf("Shutting down resources for partition %s\n", partitionClient.PartitionID())
 		shutdownPartitionResources(partitionClient)
 	}()
 
 	// 1/3 [BEGIN] Initialize any partition specific resources for your application.
 	if err := initializePartitionResources(partitionClient.PartitionID()); err != nil {
+		fmt.Printf("Error initializing resources for partition %s: %v\n", partitionClient.PartitionID(), err)
 		return err
 	}
 
 	// 2/3 [CONTINUOUS] Receive events, checkpointing as needed using UpdateCheckpoint.
 	for {
 		// Wait up to a minute for 100 events, otherwise returns whatever we collected during that time.
+		fmt.Printf("Receiving events for partition %s\n", partitionClient.PartitionID())
 		receiveCtx, cancelReceive := context.WithTimeout(context.TODO(), time.Minute)
 		events, err := partitionClient.ReceiveEvents(receiveCtx, 100, nil)
 		cancelReceive()

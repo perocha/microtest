@@ -26,18 +26,8 @@ spec:
             secretKeyRef:
               name: eventhubconsumervnext
               key: eventhubconsumervnextconnectionstring
-        - name: STORAGE_ACCOUNT_NAME
+        - name: CHECKPOINTSTORE_STORAGE_CONNECTION_STRING
           valueFrom:
             secretKeyRef:
-              name: storage
-              key: storageaccountname
-        - name: STORAGE_CONNECTION_STRING
-          valueFrom:
-            secretKeyRef:
-              name: storageconnection
-              key: storageconnectionstring
-        - name: PARTITION_LEASE_CONTAINER
-          valueFrom:
-            secretKeyRef:
-              name: partitionlease
-              key: partitionleasecontainer
+              name: checkpointstore
+              key: checkpointstoreconnectionstring
