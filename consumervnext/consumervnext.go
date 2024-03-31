@@ -2,21 +2,18 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
-	"time"
 	"os/signal"
 	"syscall"
 
 	"github.com/microtest/telemetry"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs"
 )
 
 const (
-	SERVICE_NAME = "Consumer"
+	SERVICE_NAME  = "Consumer"
 	MaxPartitions = 4
 )
 
@@ -95,9 +92,6 @@ func main() {
 */
 
 func main() {
-	eventHubConnectionString := os.Getenv("EVENTHUB_CONNECTION_STRING")
-	eventHubName := os.Getenv("EVENTHUB_NAME")
-
 	// Initialize telemetry
 	telemetry.InitTelemetry(SERVICE_NAME)
 
