@@ -16,6 +16,16 @@ This folder contains shared code that is used by both the publisher and consumer
 
 # Build & Deployment
 
+## Creating local docker image
+
+To create a local docker images for each microservice, you can use the following command:
+
+```bash
+docker image build -t consumer -f .\consumer\Dockerfile .
+```
+
+## GitHub Actions
+
 Build and deployment are done using Github Actions.
 
 First the image is compiled and pushed to Azure Container Registry. Each service has its own Dockerfile to create the microservice image.
