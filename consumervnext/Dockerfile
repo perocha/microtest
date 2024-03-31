@@ -22,13 +22,13 @@ COPY ./messaging ./messaging
 COPY ./telemetry ./telemetry
 
 # Build the Go app
-RUN go build -o consumer .
+RUN go build -o consumervnext .
 
 # Start a new stage from scratch
 FROM alpine:latest  
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=builder /app/consumer /
+COPY --from=builder /app/consumervnext /
 
 # Command to run the executable
-CMD ["/consumer"]
+CMD ["/consumervnext"]
