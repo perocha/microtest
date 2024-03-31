@@ -28,8 +28,10 @@ func main() {
 	telemetry.InitTelemetry(SERVICE_NAME)
 
 	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMER_CONNECTION_STRING")
-	eventHubName := os.Getenv("EVENTHUB_NAME")
-	partitionID := os.Getenv("EVENTHUB_PARTITION_ID")
+	//	eventHubName := os.Getenv("EVENTHUB_NAME")
+	//	partitionID := os.Getenv("EVENTHUB_PARTITION_ID")
+	eventHubName := "microtest-eventhub2"
+	partitionID := "0"
 
 	// Create new consumer client using connection string
 	consumerClient, err := azeventhubs.NewConsumerClientFromConnectionString(eventHubConnectionString, eventHubName, azeventhubs.DefaultConsumerGroup, nil)
