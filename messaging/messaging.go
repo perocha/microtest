@@ -7,7 +7,8 @@ import (
 	"strings"
 	"time"
 
-	eventhub "github.com/Azure/azure-event-hubs-go"
+	//	eventhub "github.com/Azure/azure-event-hubs-go"
+	eventhub "github.com/Azure/azure-event-hubs-go/v3"
 	"github.com/microtest/telemetry"
 )
 

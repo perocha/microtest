@@ -78,3 +78,12 @@ The consumer service uses a partition lease process to manage the partitions in 
 I'm using storage account to store the lease information. The lease is a blob file that contains the partition id and the offset of the last message processed.
 
 Blob name: partitionlease
+
+
+## Testing
+
+To send a message to the publisher service, you can use curl:
+
+```bash
+curl -X POST -H "Content-Type: application/json" -d "{\"content\": \"your_content_here\", \"count\": 10}" http://<ip address>:80/publish
+```
