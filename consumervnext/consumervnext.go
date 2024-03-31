@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/microtest/telemetry"
@@ -121,6 +122,8 @@ func main() {
 	}
 
 	// Run your processing logic here using consumerClients...
+	fmt.Println("Consumervnext::Created", MaxPartitions, "consumer clients")
+	telemetry.TrackTrace("Consumervnext::Created "+strconv.Itoa(MaxPartitions)+" consumer clients", telemetry.Information, map[string]string{"PartitionCount": strconv.Itoa(MaxPartitions)})
 
 	// Handle termination signals for graceful shutdown
 	stop := make(chan os.Signal, 1)
@@ -141,8 +144,12 @@ func main() {
 func createConsumerClient(eventHubConnectionString, eventHubName string, partitionID int) (*azeventhubs.ConsumerClient, error) {
 	consumerClient, err := azeventhubs.NewConsumerClientFromConnectionString(eventHubConnectionString, eventHubName, fmt.Sprintf("%d", partitionID), nil)
 	if err != nil {
+		fmt.Println("Consumervnext::Failed to create new consumer client for partition", partitionID, ":", err)
+		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Failed to create new event hub instance"})
 		return nil, err
 	}
+
+	telemetry.TrackTrace("Created consumer client for partition "+strconv.Itoa(partitionID), telemetry.Information, map[string]string{"PartitionID": fmt.Sprintf("%d", partitionID)})
 
 	return consumerClient, nil
 }
