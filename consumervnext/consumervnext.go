@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"time"
 
@@ -38,6 +39,7 @@ func main() {
 
 	if err != nil {
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Failed to create new event hub instance"})
+		fmt.Println("Failed to create new consumer client" + err.Error())
 		panic(err)
 	}
 
@@ -51,6 +53,7 @@ func main() {
 
 	if err != nil {
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Failed to create new partition client"})
+		fmt.Println("Failed to create new partition client" + err.Error())
 		panic(err)
 	}
 
@@ -58,12 +61,14 @@ func main() {
 
 	// Will wait up to 1 minute for 100 events. If the context is cancelled (or expires)
 	// you'll get any events that have been collected up to that point.
+	fmt.Println("Receiving events...")
 	receiveCtx, cancel := context.WithTimeout(context.TODO(), time.Minute)
 	events, err := partitionClient.ReceiveEvents(receiveCtx, 100, nil)
 	cancel()
 
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Error receiving events"})
+		fmt.Println("Error receiving events: ", err)
 		panic(err)
 	}
 
@@ -71,7 +76,10 @@ func main() {
 		// We're assuming the Body is a byte-encoded string. EventData.Body supports any payload
 		// that can be encoded to []byte.
 		telemetry.TrackTrace("Event received with body", telemetry.Information, map[string]string{"body": string(event.Body)})
+		fmt.Println("Event received with body: ", string(event.Body))
 	}
 
 	telemetry.TrackTrace("Done receiving events", telemetry.Information, nil)
+	fmt.Println("Done receiving events")
+
 }
