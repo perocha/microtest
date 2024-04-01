@@ -107,6 +107,7 @@ func main() {
 	}
 }
 
+// ProcessEvents implements the logic that is executed when events are received from the event hub
 func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error {
 	defer closePartitionResources(partitionClient)
 	for {
@@ -135,11 +136,12 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error 
 	}
 }
 
+// Closes the partition client
 func closePartitionResources(partitionClient *azeventhubs.ProcessorPartitionClient) {
 	defer partitionClient.Close(context.TODO())
 }
 
-// handleError logs the error message and error to App Insights
+// Logs the error message and sends an exception to App Insights
 func handleError(message string, err error) {
 	// Log the error using telemetry
 	fmt.Println("Consumer::handleError::Message: ", message)
