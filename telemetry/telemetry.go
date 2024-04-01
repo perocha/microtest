@@ -94,7 +94,7 @@ func TrackRequest(Method string, Url string, Duration time.Duration, ResponseCod
 
 	operationID := client.Context().Tags.Operation().GetId()
 	log.Println("TrackRequest::OperationID: %s", operationID)
-	log.Println("TrackRequest::Id: ", request.Id)
+	log.Println("TrackRequest::Id: %s", request.Id)
 }
 
 // Track a dependency to App Insights
@@ -120,6 +120,6 @@ func TrackDependency(
 	client.Track(dependency)
 
 	operationID := client.Context().Tags.Operation().GetId()
-	log.Println("TrackDependency::OperationID: %s\n", operationID)
-	log.Println("TrackDependency::Id: ", dependency.Id)
+	log.Println("TrackDependency::OperationID: %s", operationID)
+	log.Println("TrackDependency::Id: %s", dependency.Id)
 }
