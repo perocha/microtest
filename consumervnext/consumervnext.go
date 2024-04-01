@@ -76,6 +76,8 @@ func main() {
 		for {
 			partitionClient := processor.NextPartitionClient(context.TODO())
 
+			fmt.Println("Consumervnext::PartitionID::", partitionClient.PartitionID())
+
 			if partitionClient == nil {
 				break
 			}
@@ -112,10 +114,10 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error 
 			return err
 		}
 
-		fmt.Printf("Processing %d event(s)\n", len(events))
+		fmt.Printf("Consumervnext::PartitionID::%s\n::Processing %d event(s)\n", partitionClient.PartitionID(), len(events))
 
 		for _, event := range events {
-			fmt.Printf("Event received with body %v\n", string(event.Body))
+			fmt.Printf("Consumervnext::Event received with body %v\n", string(event.Body))
 		}
 
 		if len(events) != 0 {
