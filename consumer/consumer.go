@@ -32,35 +32,16 @@ func main() {
 
 	fmt.Println("Consumer::Consumer initialized")
 
-	// Create a lease manager for partition leasing
-	accountName := os.Getenv("STORAGE_ACCOUNT_NAME")
-	storageConnectionString := os.Getenv("STORAGE_CONNECTION_STRING")
-	partitionLeaseContainer := os.Getenv("PARTITION_LEASE_CONTAINER")
-	leaseManager, err := messaging.NewLeaseManager(accountName, storageConnectionString, partitionLeaseContainer)
-
-	if err != nil {
-		handleError("Consumer::Failed to initialize LeaseManager", err)
-		return
-	}
-
 	// Try to acquire a lease from each partition
 	for i := 0; i < NUM_PARTITIONS; i++ {
 		retries := 0
 		var partitionID string
 
 		for retries < maxRetries {
-			var err error
-			partitionID, err = messaging.AcquireLease(leaseManager, NUM_PARTITIONS, int32(leaseDuration.Seconds()))
-			// Bypass
 			partitionID = "0"
-			err = nil
-
-			if err == nil {
-				break
-			}
 
 			// Log the error and retry after a delay
-			telemetry.TrackTrace("Consumer::Failed to acquire lease::Retry = "+strconv.Itoa(retries+1)+"/"+strconv.Itoa(maxRetries), telemetry.Error, map[string]string{"retries": strconv.Itoa(retries + 1)})
+			telemetry.TrackTrace("Consumer::Failed to acquire lease::Retry = "+strconv.Itoa(retries+1)+"/"+strconv.Itoa(maxRetries), telemetry.Error, map[string]string{"retries": strconv.Itoa(retries + 1)}, "")
 			time.Sleep(CustomIncrementalDelay(backoffDelay, retries))
 			retries++
 
@@ -73,7 +54,7 @@ func main() {
 		}
 
 		// Lease acquired successfully, log to App Insights
-		telemetry.TrackTrace("Consumer::Acquired lease for partition: "+partitionID, telemetry.Information, map[string]string{"partitionID": partitionID})
+		telemetry.TrackTrace("Consumer::Acquired lease for partition: "+partitionID, telemetry.Information, map[string]string{"partitionID": partitionID}, "")
 
 		// Start consuming messages from the assigned partition
 		consumeMessages(partitionID)
@@ -107,7 +88,7 @@ func consumeMessages(partitionID string) error {
 // processMessage is the business logic that processes the message
 func processMessage(msg messaging.Message) {
 	// Log the event to App Insights
-	telemetry.TrackTrace("Consumer::processMessage::"+msg.MessageId, telemetry.Information, map[string]string{"payload": msg.Payload, "messageId": msg.MessageId})
+	telemetry.TrackTrace("Consumer::processMessage::"+msg.MessageId, telemetry.Information, map[string]string{"payload": msg.Payload, "messageId": msg.MessageId}, "")
 }
 
 // handleError logs the error message and error to App Insights

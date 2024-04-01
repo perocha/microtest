@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	//	eventhub "github.com/Azure/azure-event-hubs-go"
 	eventhub "github.com/Azure/azure-event-hubs-go/v3"
 	"github.com/microtest/telemetry"
 )
@@ -70,7 +69,7 @@ func (e *EventHub) Publish(serviceName string, operationID string, msg Message) 
 	jsonData, err := json.Marshal(msg)
 	if err != nil {
 		// Failed to marshal message, log dependency failure to App Insights
-		telemetry.TrackDependency("Failed to marshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()}, operationID)
+		telemetry.TrackDependency("Publish::Failed to marshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()}, operationID)
 		return err
 	}
 
@@ -81,14 +80,14 @@ func (e *EventHub) Publish(serviceName string, operationID string, msg Message) 
 	errHub := e.Hub.Send(ctx, event)
 
 	// Trace with operation ID
-	telemetry.TrackTraceNew("Message sent to event hub", telemetry.Information, map[string]string{"messageId": msg.MessageId, "content": msg.Payload}, operationID)
+	telemetry.TrackTrace("Publish::Message sent to event hub", telemetry.Information, map[string]string{"messageId": msg.MessageId, "content": msg.Payload}, operationID)
 
 	if errHub != nil {
 		// Failed to send message, log dependency failure to App Insights
-		telemetry.TrackDependency("Failed to send message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": errHub.Error(), "messageId": msg.MessageId}, operationID)
+		telemetry.TrackDependency("Publish::Failed to send message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": errHub.Error(), "messageId": msg.MessageId}, operationID)
 	} else {
 		// Successfully sent message, log to App Insights
-		telemetry.TrackDependency("Successfully sent message", serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"messageId": msg.MessageId}, operationID)
+		telemetry.TrackDependency("Publish::Successfully sent message", serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"messageId": msg.MessageId}, operationID)
 	}
 
 	return errHub

@@ -59,21 +59,7 @@ func TrackException(err error, Severity contracts.SeverityLevel, Properties map[
 }
 
 // Sends a trace message to App Insights
-func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map[string]string) {
-	if client == nil {
-		log.Printf("Message: %s, Properties: %v, Severity: %v\n", Message, Properties, Severity)
-		return
-	}
-
-	trace := appinsights.NewTraceTelemetry(Message, Severity)
-	for k, v := range Properties {
-		trace.Properties[k] = v
-	}
-	client.Track(trace)
-}
-
-// Sends a trace message to App Insights
-func TrackTraceNew(Message string, Severity contracts.SeverityLevel, Properties map[string]string, operationID string) string {
+func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map[string]string, parentID string) string {
 	if client == nil {
 		log.Printf("Message: %s, Properties: %v, Severity: %v\n", Message, Properties, Severity)
 		return ""
@@ -85,8 +71,8 @@ func TrackTraceNew(Message string, Severity contracts.SeverityLevel, Properties 
 	}
 
 	// Set parent id
-	if operationID != "" {
-		trace.Tags.Operation().SetParentId(operationID)
+	if parentID != "" {
+		trace.Tags.Operation().SetParentId(parentID)
 	}
 	client.Track(trace)
 
@@ -95,7 +81,7 @@ func TrackTraceNew(Message string, Severity contracts.SeverityLevel, Properties 
 }
 
 // Send a request trace to App Insights
-func TrackRequest(OperationID, Method, Url string, Duration time.Duration, ResponseCode string, Success bool, Source string, Properties map[string]string) string {
+func TrackRequest(Method, Url string, Duration time.Duration, ResponseCode string, Success bool, Source string, Properties map[string]string) string {
 	if client == nil {
 		log.Printf("Name: %s, Url: %v, Duration: %s, ResponseCode: %s, Success: %t\n", Method, Url, Duration, ResponseCode, Success)
 		return ""
@@ -107,8 +93,6 @@ func TrackRequest(OperationID, Method, Url string, Duration time.Duration, Respo
 		request.Properties[k] = v
 	}
 	client.Track(request)
-
-	request.Tags.Operation().SetId(OperationID)
 
 	// Return the operation id
 	return request.Tags.Operation().GetId()
@@ -124,7 +108,7 @@ func TrackDependency(
 	startTime time.Time,
 	endTime time.Time,
 	properties map[string]string,
-	operationID string,
+	parentID string,
 ) string {
 	// Create more descriptive information to trace, with the caller name and the dependency data
 	dependencyText := dependencyName + "::" + dependencyData
@@ -138,8 +122,8 @@ func TrackDependency(
 	}
 
 	// Set parent id
-	if operationID != "" {
-		dependency.Tags.Operation().SetParentId(operationID)
+	if parentID != "" {
+		dependency.Tags.Operation().SetParentId(parentID)
 	}
 
 	client.Track(dependency)

@@ -125,8 +125,7 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient, operat
 		for _, event := range events {
 			log.Printf("Consumervnext::PartitionID::%s::Events received %v\n", partitionClient.PartitionID(), string(event.Body))
 			log.Printf("Offset: %d Sequence number: %d MessageID: %s\n", event.Offset, event.SequenceNumber, *event.MessageID)
-			log.Printf("operationID: %s\n", operationID)
-			telemetry.TrackTraceNew("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)}, operationID)
+			telemetry.TrackTrace("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)}, operationID)
 		}
 
 		if len(events) != 0 {
@@ -146,7 +145,7 @@ func closePartitionResources(partitionClient *azeventhubs.ProcessorPartitionClie
 // Logs the error message and sends an exception to App Insights
 func handleError(message string, err error) {
 	// Log the error using telemetry
-	log.Println("Consumer::handleError::Message: ", message)
-	log.Println("Consumer::handleError::Error: ", err)
+	log.Println("Consumervnext::handleError::Message: ", message)
+	log.Println("Consumervnext::handleError::Error: ", err)
 	telemetry.TrackException(err, telemetry.Error, map[string]string{"Client": SERVICE_NAME, "Error": err.Error(), "Message": message})
 }

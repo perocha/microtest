@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -46,8 +45,7 @@ func main() {
 	}
 
 	// Server started in the specified port, log to App Insights
-	telemetry.TrackTrace("Publisher::ServerStarted on port "+port,
-		telemetry.Information, map[string]string{"port": port})
+	telemetry.TrackTrace("Publisher::ServerStarted on port "+port, telemetry.Information, map[string]string{"port": port}, "")
 
 	// Start the server
 	telemetry.TrackException(server.ListenAndServe(), telemetry.Error, nil)
@@ -70,11 +68,8 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Track the "request" trace to App Insights
-	operationID := uuid.New().String()
-	log.Printf("Publisher::OperationID::%s", operationID)
-	test := telemetry.TrackRequest(operationID, r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
-	log.Printf("Publisher::Test::%s", test)
+	// Get a new operation ID to track the end-to-end request
+	operationID := telemetry.TrackRequest(r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
 
 	// Publish X number of messages, based on the count received in the POST request
 	for i := 0; i < message.Count; i++ {
@@ -92,8 +87,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			// Failed to publish message, log the error to App Insights
-			telemetry.TrackTrace("Publisher::Failed to publish message: "+messageID+")",
-				telemetry.Error, map[string]string{"Error": err.Error()})
+			telemetry.TrackTrace("Publisher::Failed to publish message: "+messageID+")", telemetry.Error, map[string]string{"Error": err.Error()}, "")
 		}
 	}
 
