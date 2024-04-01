@@ -56,9 +56,6 @@ func TrackException(err error, Severity contracts.SeverityLevel, Properties map[
 	}
 
 	client.Track(exception)
-
-	operationID := client.Context().Tags.Operation().GetId()
-	log.Println("TrackException::OperationID: %s", operationID)
 }
 
 // Sends a trace message to App Insights
@@ -73,9 +70,6 @@ func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map
 		trace.Properties[k] = v
 	}
 	client.Track(trace)
-
-	operationID := trace.Properties["Operation Id"]
-	log.Println("TrackTrace::OperationID: %s", operationID)
 }
 
 // Send a request trace to App Insights
@@ -91,10 +85,6 @@ func TrackRequest(Method string, Url string, Duration time.Duration, ResponseCod
 		request.Properties[k] = v
 	}
 	client.Track(request)
-
-	operationID := client.Context().Tags.Operation().GetId()
-	log.Println("TrackRequest::OperationID: %s", operationID)
-	log.Println("TrackRequest::Id: %s", request.Id)
 }
 
 // Track a dependency to App Insights
@@ -119,7 +109,5 @@ func TrackDependency(
 	}
 	client.Track(dependency)
 
-	pepe := "test"
-	pepe2 := "1234"
-	log.Printf("TrackDependency::Pepe: $%s$ $%s$\n", pepe2, pepe)
+	log.Printf("TrackDependency::Troubleshoot:$%s$ $%s$\n", dependency.Id, dependency.Data)
 }
