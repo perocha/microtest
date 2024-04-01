@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	SERVICE_NAME  = "Consumer"
+	SERVICE_NAME  = "Consumervnext"
 	MaxPartitions = 4
 )
 
@@ -63,7 +63,7 @@ func main() {
 
 	defer consumerClient.Close(context.TODO())
 
-	// create a processor to receive and process events
+	// Create a processor to receive and process events
 	processor, err := azeventhubs.NewProcessor(consumerClient, checkpointStore, nil)
 
 	if err != nil {
@@ -71,28 +71,31 @@ func main() {
 		panic(err)
 	}
 
-	//  for each partition in the event hub, create a partition client with processEvents as the function to process events
+	// For each partition in the event hub, create a partition client with processEvents as the function to process events
 	dispatchPartitionClients := func() {
 		for {
-			partitionClient := processor.NextPartitionClient(context.TODO())
+			startTime := time.Now()
 
-			telemetry.TrackTrace("Consumervnext::Create partition client::PartitionID::"+partitionClient.PartitionID(), telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID()})
+			// Get the next partition client
+			partitionClient := processor.NextPartitionClient(context.TODO())
+			fmt.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
+			telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()})
 
 			if partitionClient == nil {
+				// No more partition clients to process
 				break
 			}
 
 			go func() {
 				if err := processEvents(partitionClient); err != nil {
-					handleError("Consumervnext::Error processing events", err)
+					handleError("Consumervnext::Error processing events for partition "+partitionClient.PartitionID(), err)
 					panic(err)
 				}
 			}()
 		}
 	}
 
-	// run all partition clients
-	telemetry.TrackTrace("Consumervnext::Starting partition clients", telemetry.Information, map[string]string{"Client": SERVICE_NAME})
+	// Run all partition clients
 	go dispatchPartitionClients()
 
 	processorCtx, processorCancel := context.WithCancel(context.TODO())
@@ -115,7 +118,7 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error 
 			return err
 		}
 
-		//fmt.Printf("Consumervnext::PartitionID::%s::Processing %d event(s)\n", partitionClient.PartitionID(), len(events))
+		fmt.Printf("Consumervnext::PartitionID::%s::Processing %d event(s)\n", partitionClient.PartitionID(), len(events))
 
 		for _, event := range events {
 			fmt.Printf("Consumervnext::PartitionID::%s::Events received %v\n", partitionClient.PartitionID(), string(event.Body))
@@ -125,7 +128,7 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error 
 
 		if len(events) != 0 {
 			if err := partitionClient.UpdateCheckpoint(context.TODO(), events[len(events)-1], nil); err != nil {
-				telemetry.TrackTrace("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Error updating checkpoint", telemetry.Error, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Error": err.Error()})
+				handleError("Consumervnext::Error updating checkpoint", err)
 				return err
 			}
 		}
