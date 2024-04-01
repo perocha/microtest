@@ -111,12 +111,13 @@ func TrackDependency(
 	dependencyText := dependencyName + "::" + dependencyData
 
 	dependency := appinsights.NewRemoteDependencyTelemetry(dependencyText, dependencyType, dependencyTarget, dependencySuccess)
+
 	dependency.Data = dependencyData
 	dependency.MarkTime(startTime, endTime)
 	for k, v := range properties {
 		dependency.Properties[k] = v
 	}
-	dependency.Properties["Operation Id"] = operationID
+	dependency.Id = operationID
 	client.Track(dependency)
 
 	log.Printf("TrackDependency::Troubleshoot:$%s$\n", operationID)
