@@ -24,6 +24,7 @@ func main() {
 	telemetry.InitTelemetry(SERVICE_NAME)
 
 	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
+	checkpointStoreConnectionString := os.Getenv("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
 	//	eventHubName := os.Getenv("EVENTHUB_NAME")
 	//	partitionID := os.Getenv("EVENTHUB_PARTITION_ID")
 	eventHubName := "microtest-eventhub2"
@@ -35,7 +36,7 @@ func main() {
 	fmt.Println("Consumervnext::EventHubConnectionString::", eventHubConnectionString)
 
 	// create a container client using a connection string and container name
-	checkClient, err := container.NewClientFromConnectionString(CHECKPOINTSTORE_STORAGE_CONNECTION_STRING, containerName, nil)
+	checkClient, err := container.NewClientFromConnectionString(checkpointStoreConnectionString, containerName, nil)
 
 	if err != nil {
 		fmt.Println("Consumervnext::Error creating container client::", err)
@@ -116,7 +117,7 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error 
 		}
 
 		if len(events) != 0 {
-			if err := partitionClient.UpdateCheckpoint(context.TODO(), events[len(events)-1]); err != nil {
+			if err := partitionClient.UpdateCheckpoint(context.TODO(), events[len(events)-1], nil); err != nil {
 				return err
 			}
 		}
