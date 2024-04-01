@@ -39,7 +39,7 @@ func InitTelemetry(serviceName string) {
 	client.Context().Tags.Cloud().SetRole(serviceName)
 
 	// Send a trace message to make sure it's working
-	client.TrackTrace("Telemetry::App Insights initialized by "+serviceName, contracts.Information)
+	client.TrackTrace(serviceName+"::Telemetry::App Insights initialized", contracts.Information)
 }
 
 // TrackException sends an exception to App Insights

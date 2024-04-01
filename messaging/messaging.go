@@ -79,9 +79,6 @@ func (e *EventHub) Publish(serviceName string, operationID string, msg Message) 
 	// Send the message to the EventHub
 	errHub := e.Hub.Send(ctx, event)
 
-	// Trace with operation ID
-	telemetry.TrackTrace("Publish::Message sent to event hub", telemetry.Information, map[string]string{"messageId": msg.MessageId, "content": msg.Payload}, operationID)
-
 	if errHub != nil {
 		// Failed to send message, log dependency failure to App Insights
 		telemetry.TrackDependency("Publish::Failed to send message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": errHub.Error(), "messageId": msg.MessageId}, operationID)
