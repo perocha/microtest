@@ -116,7 +116,7 @@ func TrackDependency(
 	for k, v := range properties {
 		dependency.Properties[k] = v
 	}
-	dependency.Properties["OperationID"] = operationID
+	dependency.Properties["Operation Id"] = operationID
 	client.Track(dependency)
 
 	log.Printf("TrackDependency::Troubleshoot:$%s$\n", operationID)
