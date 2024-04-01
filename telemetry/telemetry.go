@@ -120,12 +120,6 @@ func TrackDependency(
 	}
 	client.Track(dependency)
 
-	operationID := client.Context().Tags.Operation().GetId()
-	log.Println("TrackDependency::OperationID: %s", operationID)
-	log.Println("TrackDependency::Id: %s", dependency.Id)
-	fmt.Println("TrackDependency::Data: %s", dependency.Id)
-	fmt.Printf("TrackDependency::Data: %s\n", dependency.Id)
-
 	pepe := "test"
-	log.Println("TrackDependency::Id: %s", pepe)
+	fmt.Printf("TrackDependency::Pepe: %s %s\n", dependency.Id, pepe)
 }
