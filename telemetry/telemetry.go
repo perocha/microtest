@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	appinsights "github.com/microsoft/ApplicationInsights-Go/appinsights"
 	"github.com/microsoft/ApplicationInsights-Go/appinsights/contracts"
 )
@@ -60,12 +61,17 @@ func TrackException(err error, Severity contracts.SeverityLevel, Properties map[
 
 // Sends a trace message to App Insights
 func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map[string]string) {
+	// Create a unique UUID for this operation
+	operationID := uuid.New().String()
+
 	if client == nil {
 		log.Println("Message: %s, Properties: %v, Severity: %v", Message, Properties, Severity)
 		return
 	}
 
 	trace := appinsights.NewTraceTelemetry(Message, Severity)
+	trace.Properties["OperationID"] = operationID
+	log.Printf("TrackTrace::Troubleshoot:$%s$\n", operationID)
 	for k, v := range Properties {
 		trace.Properties[k] = v
 	}
@@ -98,6 +104,9 @@ func TrackDependency(
 	endTime time.Time,
 	properties map[string]string,
 ) {
+	// Create a unique UUID for this operation
+	operationID := uuid.New().String()
+
 	// Create more descriptive information to trace, with the caller name and the dependency data
 	dependencyText := dependencyName + "::" + dependencyData
 
@@ -107,7 +116,8 @@ func TrackDependency(
 	for k, v := range properties {
 		dependency.Properties[k] = v
 	}
+	dependency.Properties["OperationID"] = operationID
 	client.Track(dependency)
 
-	log.Printf("TrackDependency::Troubleshoot:$%s$ $%s$\n", dependency.Id, dependency.Data)
+	log.Printf("TrackDependency::Troubleshoot:$%s$\n", operationID)
 }
