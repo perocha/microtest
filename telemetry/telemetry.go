@@ -45,7 +45,7 @@ func InitTelemetry(serviceName string) {
 // TrackException sends an exception to App Insights
 func TrackException(err error, Severity contracts.SeverityLevel, Properties map[string]string) {
 	if client == nil {
-		log.Printf("Exception: %s\n", err.Error())
+		log.Println("Exception: %s", err.Error())
 		return
 	}
 
@@ -58,13 +58,13 @@ func TrackException(err error, Severity contracts.SeverityLevel, Properties map[
 	client.Track(exception)
 
 	operationID := client.Context().Tags.Operation().GetId()
-	log.Printf("TrackException::OperationID: %s\n", operationID)
+	log.Println("TrackException::OperationID: %s", operationID)
 }
 
 // Sends a trace message to App Insights
 func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map[string]string) {
 	if client == nil {
-		log.Printf("Message: %s, Properties: %v, Severity: %v\n", Message, Properties, Severity)
+		log.Println("Message: %s, Properties: %v, Severity: %v", Message, Properties, Severity)
 		return
 	}
 
@@ -74,14 +74,14 @@ func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map
 	}
 	client.Track(trace)
 
-	operationID := client.Context().Tags.Operation().GetId()
-	log.Printf("TrackTrace::OperationID: %s\n", operationID)
+	operationID := trace.Properties["Operation Id"]
+	log.Println("TrackTrace::OperationID: %s", operationID)
 }
 
 // Send a request trace to App Insights
 func TrackRequest(Method string, Url string, Duration time.Duration, ResponseCode string, Success bool, Source string, Properties map[string]string) {
 	if client == nil {
-		log.Printf("Name: %s, Url: %v, Duration: %s, ResponseCode: %s, Success: %t\n", Method, Url, Duration, ResponseCode, Success)
+		log.Println("Name: %s, Url: %v, Duration: %s, ResponseCode: %s, Success: %t", Method, Url, Duration, ResponseCode, Success)
 		return
 	}
 
@@ -93,7 +93,8 @@ func TrackRequest(Method string, Url string, Duration time.Duration, ResponseCod
 	client.Track(request)
 
 	operationID := client.Context().Tags.Operation().GetId()
-	log.Printf("TrackRequest::OperationID: %s\n", operationID)
+	log.Println("TrackRequest::OperationID: %s", operationID)
+	log.Println("TrackRequest::Id: ", request.Id)
 }
 
 // Track a dependency to App Insights
@@ -119,5 +120,6 @@ func TrackDependency(
 	client.Track(dependency)
 
 	operationID := client.Context().Tags.Operation().GetId()
-	log.Printf("TrackDependency::OperationID: %s\n", operationID)
+	log.Println("TrackDependency::OperationID: %s\n", operationID)
+	log.Println("TrackDependency::Id: ", dependency.Id)
 }
