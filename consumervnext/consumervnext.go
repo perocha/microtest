@@ -119,7 +119,7 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error 
 
 		for _, event := range events {
 			fmt.Printf("Consumervnext::PartitionID::%s::Events received %v\n", partitionClient.PartitionID(), string(event.Body))
-			fmt.Printf("Offset: %d Sequence number: %d MessageID: %s\n", event.Offset, event.SequenceNumber, event.MessageID)
+			fmt.Printf("Offset: %d Sequence number: %d MessageID: %v\n", event.Offset, event.SequenceNumber, event.MessageID)
 			telemetry.TrackTrace("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)})
 		}
 
