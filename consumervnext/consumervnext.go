@@ -80,7 +80,7 @@ func main() {
 			// Get the next partition client
 			partitionClient := processor.NextPartitionClient(context.TODO())
 			log.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
-			operationID := telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()})
+			operationID := telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, "")
 
 			if partitionClient == nil {
 				// No more partition clients to process

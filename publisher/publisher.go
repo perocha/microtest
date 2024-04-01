@@ -42,12 +42,11 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 			MessageId: messageID,
 		}
 
-		// Log the event to App Insights
-		telemetry.TrackTrace("Publisher::Message received, will publish message to EventHub (messageID: "+messageID+")",
-			telemetry.Information, map[string]string{"messageId": messageID, "content": message.Content, "count": strconv.Itoa(message.Count)})
+		// Track the "request" trace to App Insights
+		operationID := telemetry.TrackRequest(r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
 
 		// Publish the message to event hub
-		err = messaging.EventHubInstance.Publish("Publisher", msg)
+		err = messaging.EventHubInstance.Publish("Publisher", operationID, msg)
 
 		if err != nil {
 			// Failed to publish message, log the error to App Insights
@@ -55,9 +54,6 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 				telemetry.Error, map[string]string{"Error": err.Error()})
 		}
 	}
-
-	// Everything was OK, track the "request" call trace to App Insights
-	telemetry.TrackRequest(r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
 
 	// Send HTTP response with status code 200 (OK)
 	w.WriteHeader(http.StatusOK)

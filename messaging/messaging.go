@@ -54,13 +54,13 @@ func NewEventHub(serviceName string, connectionString string) error {
 	EventHubInstance = &EventHub{Hub: hub, EventHubName: getEventHubName(connectionString)}
 
 	// Log the dependency to App Insights (success)
-	telemetry.TrackDependency("New event hub initialized", serviceName, "EventHub", EventHubInstance.EventHubName, true, startTime, time.Now(), nil)
+	telemetry.TrackDependency("New event hub initialized", serviceName, "EventHub", EventHubInstance.EventHubName, true, startTime, time.Now(), nil, "")
 
 	return nil
 }
 
 // Publish sends a message to the EventHub
-func (e *EventHub) Publish(serviceName string, msg Message) error {
+func (e *EventHub) Publish(serviceName string, operationID string, msg Message) error {
 	startTime := time.Now()
 
 	// Create a new context for the message
@@ -70,7 +70,7 @@ func (e *EventHub) Publish(serviceName string, msg Message) error {
 	jsonData, err := json.Marshal(msg)
 	if err != nil {
 		// Failed to marshal message, log dependency failure to App Insights
-		telemetry.TrackDependency("Failed to marshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()})
+		telemetry.TrackDependency("Failed to marshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()}, operationID)
 		return err
 	}
 
@@ -80,12 +80,15 @@ func (e *EventHub) Publish(serviceName string, msg Message) error {
 	// Send the message to the EventHub
 	errHub := e.Hub.Send(ctx, event)
 
+	// Trace with operation ID
+	telemetry.TrackTraceNew("Message sent to event hub", telemetry.Information, map[string]string{"messageId": msg.MessageId, "content": msg.Payload}, operationID)
+
 	if errHub != nil {
 		// Failed to send message, log dependency failure to App Insights
-		telemetry.TrackDependency("Failed to send message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": errHub.Error(), "messageId": msg.MessageId})
+		telemetry.TrackDependency("Failed to send message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": errHub.Error(), "messageId": msg.MessageId}, operationID)
 	} else {
 		// Successfully sent message, log to App Insights
-		telemetry.TrackDependency("Successfully sent message", serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"messageId": msg.MessageId})
+		telemetry.TrackDependency("Successfully sent message", serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"messageId": msg.MessageId}, operationID)
 	}
 
 	return errHub
@@ -105,7 +108,7 @@ func (e *EventHub) ListenForMessages(serviceName string, partitionID string, mes
 		err := json.Unmarshal(event.Data, &msg)
 		if err != nil {
 			// Log the error using telemetry.TrackDependency
-			telemetry.TrackDependency("Failed to unmarshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
+			telemetry.TrackDependency("Failed to unmarshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()}, "")
 			return err
 		}
 
@@ -114,7 +117,7 @@ func (e *EventHub) ListenForMessages(serviceName string, partitionID string, mes
 			select {
 			case messages <- msg:
 				// Successfully received message, log to App Insights
-				telemetry.TrackDependency("Successfully received message id "+msg.MessageId+" from event hub from partition id "+partitionID, serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"partitionId": partitionID, "content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))})
+				telemetry.TrackDependency("Successfully received message id "+msg.MessageId+" from event hub from partition id "+partitionID, serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"partitionId": partitionID, "content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))}, "")
 				// Message successfully sent, break the loop
 				return nil
 			default:
@@ -126,7 +129,7 @@ func (e *EventHub) ListenForMessages(serviceName string, partitionID string, mes
 
 	if err != nil {
 		// Log the error using telemetry.TrackDependency
-		telemetry.TrackDependency("Error receiving message from partition", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()})
+		telemetry.TrackDependency("Error receiving message from partition", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()}, "")
 	}
 
 	return err
