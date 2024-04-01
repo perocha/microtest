@@ -117,6 +117,7 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error 
 		fmt.Printf("Consumervnext::PartitionID::%s\n::Processing %d event(s)\n", partitionClient.PartitionID(), len(events))
 
 		for _, event := range events {
+			fmt.Printf("Consumervnext::Events received with body in partition %s %v\n", partitionClient.PartitionID(), string(event.Body))
 			fmt.Printf("Consumervnext::Event received with body %v\n", string(event.Body))
 		}
 
