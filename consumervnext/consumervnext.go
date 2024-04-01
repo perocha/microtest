@@ -23,17 +23,15 @@ func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry(SERVICE_NAME)
 
+	// Get the connection strings from environment variables
 	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
 	checkpointStoreConnectionString := os.Getenv("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
 	//	eventHubName := os.Getenv("EVENTHUB_NAME")
-	//	partitionID := os.Getenv("EVENTHUB_PARTITION_ID")
 	eventHubName := "microtest-eventhub2"
-	partitionID := "0"
 	containerName := "partitionlease"
 
 	log.Println("Consumervnext::EventHubName::", eventHubName)
 	log.Println("Consumervnext::EventHubName::", eventHubName)
-	log.Println("Consumervnext::PartitionID::", partitionID)
 	log.Println("Consumervnext::ContainerName::", containerName)
 	log.Println("Consumervnext::EventHubConnectionString::", eventHubConnectionString)
 	log.Println("Consumervnext::CheckpointStoreConnectionString::", checkpointStoreConnectionString)
