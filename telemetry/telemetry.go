@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/google/uuid"
 	appinsights "github.com/microsoft/ApplicationInsights-Go/appinsights"
 	"github.com/microsoft/ApplicationInsights-Go/appinsights/contracts"
 )
@@ -61,19 +60,33 @@ func TrackException(err error, Severity contracts.SeverityLevel, Properties map[
 
 // Sends a trace message to App Insights
 func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map[string]string) {
-	// Create a unique UUID for this operation
-	operationID := uuid.New().String()
-
 	if client == nil {
 		log.Println("Message: %s, Properties: %v, Severity: %v", Message, Properties, Severity)
 		return
 	}
 
 	trace := appinsights.NewTraceTelemetry(Message, Severity)
-	trace.Properties["OperationID"] = operationID
-	log.Printf("TrackTrace::Troubleshoot:$%s$\n", operationID)
 	for k, v := range Properties {
 		trace.Properties[k] = v
+	}
+	client.Track(trace)
+}
+
+// Sends a trace message to App Insights
+func TrackTraceNew(Message string, Severity contracts.SeverityLevel, Properties map[string]string, operationID string) {
+	if client == nil {
+		log.Println("Message: %s, Properties: %v, Severity: %v", Message, Properties, Severity)
+		return
+	}
+
+	trace := appinsights.NewTraceTelemetry(Message, Severity)
+	for k, v := range Properties {
+		trace.Properties[k] = v
+	}
+
+	// Set parent id
+	if operationID != "" {
+		trace.Tags.Operation().SetParentId(operationID)
 	}
 	client.Track(trace)
 }
@@ -103,7 +116,7 @@ func TrackDependency(
 	startTime time.Time,
 	endTime time.Time,
 	properties map[string]string,
-) {
+) string {
 	// Create more descriptive information to trace, with the caller name and the dependency data
 	dependencyText := dependencyName + "::" + dependencyData
 
@@ -117,8 +130,5 @@ func TrackDependency(
 
 	client.Track(dependency)
 
-	test1 := dependency.Tags.Operation().GetId()
-	test2 := dependency.Tags.Operation().GetParentId()
-	log.Printf("TrackDependency::test1:$%s$\n", test1)
-	log.Printf("TrackDependency::test2:$%s$\n", test2)
+	return dependency.Tags.Operation().GetId()
 }

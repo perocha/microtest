@@ -80,7 +80,7 @@ func main() {
 			// Get the next partition client
 			partitionClient := processor.NextPartitionClient(context.TODO())
 			log.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
-			telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()})
+			operationID := telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()})
 
 			if partitionClient == nil {
 				// No more partition clients to process
@@ -88,7 +88,7 @@ func main() {
 			}
 
 			go func() {
-				if err := processEvents(partitionClient); err != nil {
+				if err := processEvents(partitionClient, operationID); err != nil {
 					handleError("Consumervnext::Error processing events for partition "+partitionClient.PartitionID(), err)
 					panic(err)
 				}
@@ -109,7 +109,7 @@ func main() {
 }
 
 // ProcessEvents implements the logic that is executed when events are received from the event hub
-func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error {
+func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient, operationID string) error {
 	defer closePartitionResources(partitionClient)
 	for {
 		receiveCtx, receiveCtxCancel := context.WithTimeout(context.TODO(), time.Minute)
@@ -125,7 +125,8 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error 
 		for _, event := range events {
 			log.Printf("Consumervnext::PartitionID::%s::Events received %v\n", partitionClient.PartitionID(), string(event.Body))
 			log.Printf("Offset: %d Sequence number: %d MessageID: %s\n", event.Offset, event.SequenceNumber, *event.MessageID)
-			telemetry.TrackTrace("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)})
+			log.Printf("operationID: %s\n", operationID)
+			telemetry.TrackTraceNew("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)}, operationID)
 		}
 
 		if len(events) != 0 {
