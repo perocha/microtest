@@ -45,7 +45,7 @@ func InitTelemetry(serviceName string) {
 // TrackException sends an exception to App Insights
 func TrackException(err error, Severity contracts.SeverityLevel, Properties map[string]string) {
 	if client == nil {
-		log.Println("Exception: %s", err.Error())
+		log.Printf("Exception: %s\n", err.Error())
 		return
 	}
 
@@ -61,7 +61,7 @@ func TrackException(err error, Severity contracts.SeverityLevel, Properties map[
 // Sends a trace message to App Insights
 func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map[string]string) {
 	if client == nil {
-		log.Println("Message: %s, Properties: %v, Severity: %v", Message, Properties, Severity)
+		log.Printf("Message: %s, Properties: %v, Severity: %v\n", Message, Properties, Severity)
 		return
 	}
 
@@ -75,7 +75,7 @@ func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map
 // Sends a trace message to App Insights
 func TrackTraceNew(Message string, Severity contracts.SeverityLevel, Properties map[string]string, operationID string) string {
 	if client == nil {
-		log.Println("Message: %s, Properties: %v, Severity: %v", Message, Properties, Severity)
+		log.Printf("Message: %s, Properties: %v, Severity: %v\n", Message, Properties, Severity)
 		return ""
 	}
 
