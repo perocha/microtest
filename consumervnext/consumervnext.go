@@ -119,10 +119,13 @@ func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient) error 
 
 		for _, event := range events {
 			fmt.Printf("Consumervnext::PartitionID::%s::Events received %v\n", partitionClient.PartitionID(), string(event.Body))
+			fmt.Printf("Offset: %d Sequence number: %d\n", event.Offset, event.SequenceNumber)
+			telemetry.TrackTrace("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)})
 		}
 
 		if len(events) != 0 {
 			if err := partitionClient.UpdateCheckpoint(context.TODO(), events[len(events)-1], nil); err != nil {
+				telemetry.TrackTrace("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Error updating checkpoint", telemetry.Error, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Error": err.Error()})
 				return err
 			}
 		}
