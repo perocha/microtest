@@ -33,7 +33,9 @@ func main() {
 
 	fmt.Println("Consumervnext::EventHubName::", eventHubName)
 	fmt.Println("Consumervnext::PartitionID::", partitionID)
+	fmt.Println("Consumervnext::ContainerName::", containerName)
 	fmt.Println("Consumervnext::EventHubConnectionString::", eventHubConnectionString)
+	fmt.Println("Consumervnext::CheckpointStoreConnectionString::", checkpointStoreConnectionString)
 
 	// create a container client using a connection string and container name
 	checkClient, err := container.NewClientFromConnectionString(checkpointStoreConnectionString, containerName, nil)
