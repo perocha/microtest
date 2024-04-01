@@ -31,6 +31,9 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Track the "request" trace to App Insights
+	operationID := telemetry.TrackRequest(r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
+
 	// Publish X number of messages, based on the count received in the POST request
 	for i := 0; i < message.Count; i++ {
 		// Create a unique UUID for each message sent to event hub
@@ -41,9 +44,6 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 			Payload:   message.Content,
 			MessageId: messageID,
 		}
-
-		// Track the "request" trace to App Insights
-		operationID := telemetry.TrackRequest(r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
 
 		// Publish the message to event hub
 		err = messaging.EventHubInstance.Publish("Publisher", operationID, msg)
