@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,51 +15,6 @@ import (
 	"github.com/microtest/telemetry"
 )
 
-// Method publishMessages publishes messages to the event hub
-func publishMessages(w http.ResponseWriter, r *http.Request) {
-	// Start time for tracking duration
-	startTime := time.Now()
-
-	// Parse request body
-	type Message struct {
-		Content string `json:"content"`
-		Count   int    `json:"count"`
-	}
-	var message Message
-	err := json.NewDecoder(r.Body).Decode(&message)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Track the "request" trace to App Insights
-	operationID := telemetry.TrackRequest(r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
-
-	// Publish X number of messages, based on the count received in the POST request
-	for i := 0; i < message.Count; i++ {
-		// Create a unique UUID for each message sent to event hub
-		messageID := uuid.New().String()
-
-		// Create a new message to be sent to the event hub (with payload received in POST and the unique message id)
-		msg := messaging.Message{
-			Payload:   message.Content,
-			MessageId: messageID,
-		}
-
-		// Publish the message to event hub
-		err = messaging.EventHubInstance.Publish("Publisher", operationID, msg)
-
-		if err != nil {
-			// Failed to publish message, log the error to App Insights
-			telemetry.TrackTrace("Publisher::Failed to publish message: "+messageID+")",
-				telemetry.Error, map[string]string{"Error": err.Error()})
-		}
-	}
-
-	// Send HTTP response with status code 200 (OK)
-	w.WriteHeader(http.StatusOK)
-}
-
 func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry("Publisher")
@@ -68,8 +24,7 @@ func main() {
 	err := messaging.NewEventHub("Publisher", eventHubConnectionString)
 	if err != nil {
 		// Failed to initialize EventHub, log the error to App Insights
-		telemetry.TrackTrace("Publisher::Failed to initialize EventHub",
-			telemetry.Error, map[string]string{"Error": err.Error()})
+		telemetry.TrackException(err, telemetry.Error, map[string]string{"Message": "Publisher::Failed to initialize EventHub", "Error": err.Error()})
 	}
 
 	// Create a new router
@@ -96,4 +51,52 @@ func main() {
 
 	// Start the server
 	telemetry.TrackException(server.ListenAndServe(), telemetry.Error, nil)
+}
+
+// Publishes messages to the event hub
+func publishMessages(w http.ResponseWriter, r *http.Request) {
+	// Start time for tracking duration
+	startTime := time.Now()
+
+	// Parse request body
+	type Message struct {
+		Content string `json:"content"`
+		Count   int    `json:"count"`
+	}
+	var message Message
+	err := json.NewDecoder(r.Body).Decode(&message)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Track the "request" trace to App Insights
+	operationID := uuid.New().String()
+	log.Printf("Publisher::OperationID::%s", operationID)
+	test := telemetry.TrackRequest(operationID, r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
+	log.Printf("Publisher::Test::%s", test)
+
+	// Publish X number of messages, based on the count received in the POST request
+	for i := 0; i < message.Count; i++ {
+		// Create a unique UUID for each message sent to event hub
+		messageID := uuid.New().String()
+
+		// Create a new message to be sent to the event hub (with payload received in POST and the unique message id)
+		msg := messaging.Message{
+			Payload:   message.Content,
+			MessageId: messageID,
+		}
+
+		// Publish the message to event hub
+		err = messaging.EventHubInstance.Publish("Publisher", operationID, msg)
+
+		if err != nil {
+			// Failed to publish message, log the error to App Insights
+			telemetry.TrackTrace("Publisher::Failed to publish message: "+messageID+")",
+				telemetry.Error, map[string]string{"Error": err.Error()})
+		}
+	}
+
+	// Send HTTP response with status code 200 (OK)
+	w.WriteHeader(http.StatusOK)
 }

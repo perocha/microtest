@@ -95,7 +95,7 @@ func TrackTraceNew(Message string, Severity contracts.SeverityLevel, Properties 
 }
 
 // Send a request trace to App Insights
-func TrackRequest(Method string, Url string, Duration time.Duration, ResponseCode string, Success bool, Source string, Properties map[string]string) string {
+func TrackRequest(OperationID, Method, Url string, Duration time.Duration, ResponseCode string, Success bool, Source string, Properties map[string]string) string {
 	if client == nil {
 		log.Printf("Name: %s, Url: %v, Duration: %s, ResponseCode: %s, Success: %t\n", Method, Url, Duration, ResponseCode, Success)
 		return ""
@@ -107,6 +107,8 @@ func TrackRequest(Method string, Url string, Duration time.Duration, ResponseCod
 		request.Properties[k] = v
 	}
 	client.Track(request)
+
+	request.Tags.Operation().SetId(OperationID)
 
 	// Return the operation id
 	return request.Tags.Operation().GetId()
