@@ -118,17 +118,35 @@ func TrackDependency(
 		dependency.Properties[k] = v
 	}
 	dependency.Id = operationID
-	test1 := client.Context().CommonProperties["OperationID"]
+	test1 := client.Context().CommonProperties["Operation Id"]
 	test2 := client.Context().Tags.Device().GetId()
 	test3 := client.Context().Tags.Session().GetId()
 	test4 := client.Context().Tags.Operation().GetId()
 	test5 := client.Context().Tags.Operation().GetParentId()
-
-	client.Track(dependency)
-
+	test6 := client.Context().CommonProperties["Parent Id"]
+	test7 := client.Context().CommonProperties["Id"]
 	log.Printf("TrackDependency::test1:$%s$\n", test1)
 	log.Printf("TrackDependency::test2:$%s$\n", test2)
 	log.Printf("TrackDependency::test3:$%s$\n", test3)
 	log.Printf("TrackDependency::test4:$%s$\n", test4)
 	log.Printf("TrackDependency::test5:$%s$\n", test5)
+	log.Printf("TrackDependency::test6:$%s$\n", test6)
+	log.Printf("TrackDependency::test7:$%s$\n", test7)
+
+	client.Track(dependency)
+
+	test8 := client.Context().CommonProperties["Operation Id"]
+	test9 := client.Context().Tags.Device().GetId()
+	test10 := client.Context().Tags.Session().GetId()
+	test11 := client.Context().Tags.Operation().GetId()
+	test12 := client.Context().Tags.Operation().GetParentId()
+	test13 := client.Context().CommonProperties["Parent Id"]
+	test14 := client.Context().CommonProperties["Id"]
+	log.Printf("TrackDependency::test8:$%s$\n", test8)
+	log.Printf("TrackDependency::test9:$%s$\n", test9)
+	log.Printf("TrackDependency::test10:$%s$\n", test10)
+	log.Printf("TrackDependency::test11:$%s$\n", test11)
+	log.Printf("TrackDependency::test12:$%s$\n", test12)
+	log.Printf("TrackDependency::test13:$%s$\n", test13)
+	log.Printf("TrackDependency::test14:$%s$\n", test14)
 }
