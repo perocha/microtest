@@ -1,7 +1,6 @@
 package telemetry
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -121,5 +120,6 @@ func TrackDependency(
 	client.Track(dependency)
 
 	pepe := "test"
-	fmt.Printf("TrackDependency::Pepe: %s %s\n", dependency.Id, pepe)
+	pepe2 := "1234"
+	log.Printf("TrackDependency::Pepe: $%s$ $%s$\n", pepe2, pepe)
 }
