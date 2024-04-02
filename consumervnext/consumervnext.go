@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/microtest/shared"
 	"github.com/microtest/telemetry"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs"
@@ -21,6 +22,7 @@ const (
 	MaxPartitions = 4
 )
 
+/*
 // OperationIDKey represents the key type for the operation ID in context
 type OperationIDKey string
 
@@ -28,6 +30,7 @@ const (
 	// OperationIDKeyContextKey is the key used to store the operation ID in context
 	OperationIDKeyContextKey OperationIDKey = "operationID"
 )
+*/
 
 func main() {
 	// Initialize telemetry
@@ -100,10 +103,10 @@ func main() {
 				log.Printf("Consumervnext::OperationID::%s::Creating new partition client\n", operationID)
 
 				// Create a new context with the operation ID
-				ctx := context.WithValue(context.Background(), OperationIDKeyContextKey, operationID)
+				ctx := context.WithValue(context.Background(), shared.OperationIDKeyContextKey, operationID)
 
 				log.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
-				telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, operationID)
+				telemetry.TrackDependencyCtx(ctx, "New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()})
 
 				if err := processEvents(ctx, partitionClient); err != nil {
 					handleError("Consumervnext::Error processing events for partition "+partitionClient.PartitionID(), err)
@@ -130,7 +133,7 @@ func processEvents(ctx context.Context, partitionClient *azeventhubs.ProcessorPa
 	defer closePartitionResources(partitionClient)
 
 	// Get the operation ID from the context
-	operationID := ctx.Value(OperationIDKeyContextKey).(string)
+	operationID := ctx.Value(shared.OperationIDKeyContextKey).(string)
 	log.Printf("Consumervnext::OperationID::%s::Start\n", operationID)
 
 	for {
@@ -143,13 +146,13 @@ func processEvents(ctx context.Context, partitionClient *azeventhubs.ProcessorPa
 		}
 
 		// Uncomment the following line to verify that the consumer is trying to receive events
-		// log.Printf("Consumervnext::PartitionID::%s::Processing %d event(s)\n", partitionClient.PartitionID(), len(events))
+		log.Printf("Consumervnext::PartitionID=%s::OperationID=%s::Processing %d event(s)\n", partitionClient.PartitionID(), operationID, len(events))
 
 		for _, event := range events {
 			// Events received!! Process the message
 			log.Printf("Consumervnext::PartitionID::%s::Events received %v\n", partitionClient.PartitionID(), string(event.Body))
 			log.Printf("Offset: %d Sequence number: %d MessageID: %s\n", event.Offset, event.SequenceNumber, *event.MessageID)
-			telemetry.TrackTrace("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)}, operationID)
+			telemetry.TrackTraceCtx(ctx, "Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)})
 		}
 
 		if len(events) != 0 {
