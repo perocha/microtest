@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/microtest/messaging"
+	"github.com/microtest/shared"
 	"github.com/microtest/telemetry"
 )
 
@@ -68,8 +70,9 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get a new operation ID to track the end-to-end request
+	// Get a new operation ID to track the end-to-end request and add it to the context
 	operationID := telemetry.TrackRequest(r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
+	ctx := context.WithValue(context.Background(), shared.OperationIDKeyContextKey, operationID)
 
 	// Publish X number of messages, based on the count received in the POST request
 	for i := 0; i < message.Count; i++ {
@@ -83,11 +86,11 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Publish the message to event hub
-		err = messaging.EventHubInstance.Publish("Publisher", operationID, msg)
+		err = messaging.EventHubInstance.Publish(ctx, "Publisher", operationID, msg)
 
 		if err != nil {
 			// Failed to publish message, log the error to App Insights
-			telemetry.TrackTrace("Publisher::Failed to publish message: "+messageID+")", telemetry.Error, map[string]string{"Error": err.Error()}, "")
+			telemetry.TrackTraceCtx(ctx, "Publisher::Failed to publish message: "+messageID+")", telemetry.Error, map[string]string{"Error": err.Error()})
 		}
 	}
 

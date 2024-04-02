@@ -59,11 +59,11 @@ func NewEventHub(serviceName string, connectionString string) error {
 }
 
 // Publish sends a message to the EventHub
-func (e *EventHub) Publish(serviceName string, operationID string, msg Message) error {
+func (e *EventHub) Publish(ctx context.Context, serviceName string, operationID string, msg Message) error {
 	startTime := time.Now()
 
 	// Create a new context for the message
-	ctx := context.Background()
+	//	ctx := context.Background()
 
 	// Convert the message to JSON
 	jsonData, err := json.Marshal(msg)
@@ -84,7 +84,7 @@ func (e *EventHub) Publish(serviceName string, operationID string, msg Message) 
 		telemetry.TrackDependency("Publish::Failed to send message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": errHub.Error(), "messageId": msg.MessageId}, operationID)
 	} else {
 		// Successfully sent message, log to App Insights
-		telemetry.TrackDependency("Publish::Successfully sent message", serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"messageId": msg.MessageId}, operationID)
+		telemetry.TrackDependencyCtx(ctx, "Publish::Successfully sent message", serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"messageId": msg.MessageId})
 	}
 
 	return errHub
