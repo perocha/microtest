@@ -20,6 +20,7 @@ RUN go mod download
 COPY ./consumervnext .
 COPY ./messaging ./messaging
 COPY ./telemetry ./telemetry
+COPY ./shared ./shared
 
 # Build the Go app
 RUN go build -o consumervnext .
