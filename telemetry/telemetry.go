@@ -90,6 +90,7 @@ func TrackTraceCtx(ctx context.Context, Message string, Severity contracts.Sever
 		return ""
 	}
 
+	// Create the new trace
 	trace := appinsights.NewTraceTelemetry(Message, Severity)
 	for k, v := range Properties {
 		trace.Properties[k] = v
@@ -102,6 +103,9 @@ func TrackTraceCtx(ctx context.Context, Message string, Severity contracts.Sever
 			trace.Tags.Operation().SetParentId(operationID)
 		}
 	}
+
+	// Send the trace to App Insights
+	client.Track(trace)
 
 	// Return the operation id
 	return trace.Tags.Operation().GetId()
@@ -119,6 +123,8 @@ func TrackRequest(Method, Url string, Duration time.Duration, ResponseCode strin
 	for k, v := range Properties {
 		request.Properties[k] = v
 	}
+
+	// Send the request to App Insights
 	client.Track(request)
 
 	// Return the operation id
@@ -189,6 +195,7 @@ func TrackDependencyCtx(
 		}
 	}
 
+	// Send the dependency to App Insights
 	client.Track(dependency)
 
 	return dependency.Tags.Operation().GetId()

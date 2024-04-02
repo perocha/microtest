@@ -134,7 +134,7 @@ func processEvents(ctx context.Context, partitionClient *azeventhubs.ProcessorPa
 
 	// Get the operation ID from the context
 	operationID := ctx.Value(shared.OperationIDKeyContextKey).(string)
-	log.Printf("Consumervnext::OperationID::%s::Start\n", operationID)
+	log.Printf("Consumervnext::PartitionID=%s::OperationID=%s::Start\n", partitionClient.PartitionID(), operationID)
 
 	for {
 		receiveCtx, receiveCtxCancel := context.WithTimeout(ctx, time.Minute)
