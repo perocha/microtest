@@ -21,9 +21,6 @@ const (
 	MaxPartitions = 4
 )
 
-// Type to represent the operation ID
-type OperationID string
-
 func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry(SERVICE_NAME)
@@ -91,14 +88,14 @@ func main() {
 
 			go func() {
 				// Define the operation ID using the defined OperationID type
-				operationID := OperationID(uuid.New().String())
+				operationID := uuid.New().String()
 				log.Printf("Consumervnext::OperationID::%s::Creating new partition client\n", operationID)
 
 				// Create a new context with the operation ID
-				ctx := context.WithValue(context.Background(), operationID, operationID)
+				ctx := context.WithValue(context.Background(), "operationID", operationID)
 
 				log.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
-				telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, string(operationID))
+				telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, operationID)
 
 				if err := processEvents(ctx, partitionClient); err != nil {
 					handleError("Consumervnext::Error processing events for partition "+partitionClient.PartitionID(), err)
