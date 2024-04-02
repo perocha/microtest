@@ -78,6 +78,7 @@ func main() {
 			// Track time and create a new operation ID, that will be used to track the end to end operation
 			startTime := time.Now()
 			operationID := uuid.New().String()
+			log.Printf("Consumervnext::OperationID::%s::Creating new partition client\n", operationID)
 
 			// Get the next partition client
 			partitionClient := processor.NextPartitionClient(context.TODO())
@@ -124,6 +125,7 @@ func processEvents(ctx context.Context, partitionClient *azeventhubs.ProcessorPa
 
 		// Get the operation ID from the context
 		operationID := ctx.Value("operationID").(string)
+		log.Printf("Consumervnext::OperationID::%s::Processing events\n", operationID)
 
 		if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 			return err

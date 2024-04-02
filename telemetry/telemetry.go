@@ -65,6 +65,8 @@ func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map
 		return ""
 	}
 
+	log.Printf("TrackTrace: %s\n", parentID)
+
 	trace := appinsights.NewTraceTelemetry(Message, Severity)
 	for k, v := range Properties {
 		trace.Properties[k] = v
