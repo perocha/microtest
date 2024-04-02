@@ -84,7 +84,7 @@ func TrackTrace(Message string, Severity contracts.SeverityLevel, Properties map
 }
 
 // Sends a trace message to App Insights
-func TrackTraceCtx(ctx context.Context, Message string, Severity contracts.SeverityLevel, Properties map[string]string, parentID string) string {
+func TrackTraceCtx(ctx context.Context, Message string, Severity contracts.SeverityLevel, Properties map[string]string) string {
 	if client == nil {
 		log.Printf("Message: %s, Properties: %v, Severity: %v\n", Message, Properties, Severity)
 		return ""
@@ -99,7 +99,7 @@ func TrackTraceCtx(ctx context.Context, Message string, Severity contracts.Sever
 	if operationID, ok := ctx.Value(shared.OperationIDKeyContextKey).(string); ok {
 		// Set parent id
 		if operationID != "" {
-			trace.Tags.Operation().SetParentId(parentID)
+			trace.Tags.Operation().SetParentId(operationID)
 		}
 	}
 
