@@ -125,7 +125,7 @@ func processEvents(ctx context.Context, partitionClient *azeventhubs.ProcessorPa
 	defer closePartitionResources(partitionClient)
 
 	// Get the operation ID from the context
-	operationID := ctx.Value("operationID").(string)
+	operationID := ctx.Value("operationID").(OperationID)
 	log.Printf("Consumervnext::OperationID::%s::Start\n", operationID)
 
 	for {
@@ -144,7 +144,7 @@ func processEvents(ctx context.Context, partitionClient *azeventhubs.ProcessorPa
 			// Events received!! Process the message
 			log.Printf("Consumervnext::PartitionID::%s::Events received %v\n", partitionClient.PartitionID(), string(event.Body))
 			log.Printf("Offset: %d Sequence number: %d MessageID: %s\n", event.Offset, event.SequenceNumber, *event.MessageID)
-			telemetry.TrackTrace("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)}, operationID)
+			telemetry.TrackTrace("Consumervnext::PartitionID::"+partitionClient.PartitionID()+"::Event received", telemetry.Information, map[string]string{"Client": SERVICE_NAME, "PartitionID": partitionClient.PartitionID(), "Event": string(event.Body)}, string(operationID))
 		}
 
 		if len(events) != 0 {
