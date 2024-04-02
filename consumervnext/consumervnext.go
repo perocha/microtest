@@ -21,6 +21,9 @@ const (
 	MaxPartitions = 4
 )
 
+// Type to represent the operation ID
+type OperationID string
+
 func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry(SERVICE_NAME)
@@ -77,8 +80,6 @@ func main() {
 		for {
 			// Track time and create a new operation ID, that will be used to track the end to end operation
 			startTime := time.Now()
-			operationID := uuid.New().String()
-			log.Printf("Consumervnext::OperationID::%s::Creating new partition client\n", operationID)
 
 			// Get the next partition client
 			partitionClient := processor.NextPartitionClient(context.TODO())
@@ -89,11 +90,15 @@ func main() {
 			}
 
 			go func() {
+				// Define the operation ID using the defined OperationID type
+				operationID := OperationID(uuid.New().String())
+				log.Printf("Consumervnext::OperationID::%s::Creating new partition client\n", operationID)
+
 				// Create a new context with the operation ID
-				ctx := context.WithValue(context.Background(), "operationID", operationID)
+				ctx := context.WithValue(context.Background(), OperationID("operationID"), operationID)
 
 				log.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
-				telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, operationID)
+				telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, string(operationID))
 
 				if err := processEvents(ctx, partitionClient); err != nil {
 					handleError("Consumervnext::Error processing events for partition "+partitionClient.PartitionID(), err)
@@ -118,14 +123,15 @@ func main() {
 // ProcessEvents implements the logic that is executed when events are received from the event hub
 func processEvents(ctx context.Context, partitionClient *azeventhubs.ProcessorPartitionClient) error {
 	defer closePartitionResources(partitionClient)
+
+	// Get the operation ID from the context
+	operationID := ctx.Value("operationID").(string)
+	log.Printf("Consumervnext::OperationID::%s::Start\n", operationID)
+
 	for {
 		receiveCtx, receiveCtxCancel := context.WithTimeout(ctx, time.Minute)
 		events, err := partitionClient.ReceiveEvents(receiveCtx, 100, nil)
 		receiveCtxCancel()
-
-		// Get the operation ID from the context
-		operationID := ctx.Value("operationID").(string)
-		log.Printf("Consumervnext::OperationID::%s::Processing events\n", operationID)
 
 		if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 			return err
