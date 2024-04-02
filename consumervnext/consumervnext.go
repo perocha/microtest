@@ -21,6 +21,14 @@ const (
 	MaxPartitions = 4
 )
 
+// OperationIDKey represents the key type for the operation ID in context
+type OperationIDKey string
+
+const (
+	// OperationIDKeyContextKey is the key used to store the operation ID in context
+	OperationIDKeyContextKey OperationIDKey = "operationID"
+)
+
 func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry(SERVICE_NAME)
@@ -92,7 +100,7 @@ func main() {
 				log.Printf("Consumervnext::OperationID::%s::Creating new partition client\n", operationID)
 
 				// Create a new context with the operation ID
-				ctx := context.WithValue(context.Background(), "operationID", operationID)
+				ctx := context.WithValue(context.Background(), OperationIDKeyContextKey, operationID)
 
 				log.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
 				telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, operationID)
@@ -122,7 +130,7 @@ func processEvents(ctx context.Context, partitionClient *azeventhubs.ProcessorPa
 	defer closePartitionResources(partitionClient)
 
 	// Get the operation ID from the context
-	operationID := ctx.Value("operationID").(string)
+	operationID := ctx.Value(OperationIDKeyContextKey).(string)
 	log.Printf("Consumervnext::OperationID::%s::Start\n", operationID)
 
 	for {
