@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"time"
+	"github.com/google/uuid"
 
 	"github.com/microtest/telemetry"
 
@@ -73,12 +74,12 @@ func main() {
 	// For each partition in the event hub, create a partition client with processEvents as the function to process events
 	dispatchPartitionClients := func() {
 		for {
+			// Track time and create a new operation ID, that will be used to track the end to end operation
 			startTime := time.Now()
+			operationID := uuid.New().String()
 
 			// Get the next partition client
 			partitionClient := processor.NextPartitionClient(context.TODO())
-			log.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
-			operationID := telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, "")
 
 			if partitionClient == nil {
 				// No more partition clients to process
@@ -86,6 +87,9 @@ func main() {
 			}
 
 			go func() {
+				log.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
+				telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, operationID)
+	
 				if err := processEvents(partitionClient, operationID); err != nil {
 					handleError("Consumervnext::Error processing events for partition "+partitionClient.PartitionID(), err)
 					panic(err)
