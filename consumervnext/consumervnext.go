@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"time"
+
 	"github.com/google/uuid"
 
 	"github.com/microtest/telemetry"
@@ -87,10 +88,13 @@ func main() {
 			}
 
 			go func() {
+				// Create a new context with the operation ID
+				ctx := context.WithValue(context.Background(), "operationID", operationID)
+
 				log.Printf("Consumervnext::PartitionID::%s::Partition client initialized\n", partitionClient.PartitionID())
 				telemetry.TrackDependency("New partition client initialized for partition "+partitionClient.PartitionID(), SERVICE_NAME, "EventHub", eventHubName, true, startTime, time.Now(), map[string]string{"PartitionID": partitionClient.PartitionID()}, operationID)
-	
-				if err := processEvents(partitionClient, operationID); err != nil {
+
+				if err := processEvents(ctx, partitionClient); err != nil {
 					handleError("Consumervnext::Error processing events for partition "+partitionClient.PartitionID(), err)
 					panic(err)
 				}
@@ -111,12 +115,15 @@ func main() {
 }
 
 // ProcessEvents implements the logic that is executed when events are received from the event hub
-func processEvents(partitionClient *azeventhubs.ProcessorPartitionClient, operationID string) error {
+func processEvents(ctx context.Context, partitionClient *azeventhubs.ProcessorPartitionClient) error {
 	defer closePartitionResources(partitionClient)
 	for {
-		receiveCtx, receiveCtxCancel := context.WithTimeout(context.TODO(), time.Minute)
+		receiveCtx, receiveCtxCancel := context.WithTimeout(ctx, time.Minute)
 		events, err := partitionClient.ReceiveEvents(receiveCtx, 100, nil)
 		receiveCtxCancel()
+
+		// Get the operation ID from the context
+		operationID := ctx.Value("operationID").(string)
 
 		if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 			return err
