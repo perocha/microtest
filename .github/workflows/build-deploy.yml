@@ -27,7 +27,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./consumer/Dockerfile
+        file: ./cmd/consumer/Dockerfile
         push: true
         tags: ${{secrets.ACR_NAMESPACE}}.azurecr.io/consumer:latest
 
@@ -35,7 +35,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./consumervnext/Dockerfile
+        file: ./cmd/consumervnext/Dockerfile
         push: true
         tags: ${{secrets.ACR_NAMESPACE}}.azurecr.io/consumervnext:latest
 
@@ -44,7 +44,7 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./publisher/Dockerfile
+        file: ./cmd/publisher/Dockerfile
         push: true
         tags: ${{secrets.ACR_NAMESPACE}}.azurecr.io/publisher:latest
 
