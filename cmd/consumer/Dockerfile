@@ -17,10 +17,10 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the source code and the common package into the container
-COPY ./consumer .
-COPY ./messaging ./messaging
-COPY ./telemetry ./telemetry
-COPY ./shared ./shared
+COPY ./cmd/consumer .
+COPY ./common/messaging ./common/messaging
+COPY ./common/telemetry ./common/telemetry
+COPY ./common/shared ./common/shared
 
 # Build the Go app
 RUN go build -o consumer .

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	eventhub "github.com/Azure/azure-event-hubs-go/v3"
-	"github.com/microtest/telemetry"
+	"github.com/microtest/common/telemetry"
 )
 
 // EventHubInstance is a global instance of the EventHub

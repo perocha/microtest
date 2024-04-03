@@ -11,9 +11,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
-	"github.com/microtest/messaging"
-	"github.com/microtest/shared"
-	"github.com/microtest/telemetry"
+	"github.com/microtest/common/messaging"
+	"github.com/microtest/common/shared"
+	"github.com/microtest/common/telemetry"
 )
 
 func main() {

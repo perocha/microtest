@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/microtest/messaging"
-	"github.com/microtest/telemetry"
+	"github.com/microtest/common/messaging"
+	"github.com/microtest/common/telemetry"
 )
 
 const (

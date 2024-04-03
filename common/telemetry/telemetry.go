@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/microtest/shared"
+	"github.com/microtest/common/shared"
 
 	appinsights "github.com/microsoft/ApplicationInsights-Go/appinsights"
 	"github.com/microsoft/ApplicationInsights-Go/appinsights/contracts"
