@@ -17,7 +17,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the source code and the common package into the container
-COPY ./consumervnext .
+COPY ./cmd/consumervnext .
 COPY ./common/messaging ./common/messaging
 COPY ./common/telemetry ./common/telemetry
 COPY ./common/shared ./common/shared
