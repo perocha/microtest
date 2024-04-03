@@ -17,10 +17,10 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the source code into the container
-COPY ./publisher .
-COPY ./messaging ./messaging
-COPY ./telemetry ./telemetry
-COPY ./shared ./shared
+COPY ./cmd/publisher .
+COPY ./common/messaging ./common/messaging
+COPY ./common/telemetry ./common/telemetry
+COPY ./common/shared ./common/shared
 
 # Build the Go app
 RUN go build -o publisher .
