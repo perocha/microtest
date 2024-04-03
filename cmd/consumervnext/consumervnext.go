@@ -9,8 +9,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/microtest/shared"
-	"github.com/microtest/telemetry"
+	"github.com/microtest/common/shared"
+	"github.com/microtest/common/telemetry"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs"
 	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs/checkpoints"
