@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/microtest/common/config"
 	"github.com/microtest/common/shared"
 	"github.com/microtest/common/telemetry"
 
@@ -18,19 +19,8 @@ import (
 )
 
 const (
-	SERVICE_NAME  = "Consumervnext"
-	MaxPartitions = 4
+	SERVICE_NAME = "Consumervnext"
 )
-
-/*
-// OperationIDKey represents the key type for the operation ID in context
-type OperationIDKey string
-
-const (
-	// OperationIDKeyContextKey is the key used to store the operation ID in context
-	OperationIDKeyContextKey OperationIDKey = "operationID"
-)
-*/
 
 func main() {
 	// Initialize telemetry
@@ -42,6 +32,15 @@ func main() {
 	//	eventHubName := os.Getenv("EVENTHUB_NAME")
 	eventHubName := "microtest-eventhub2"
 	containerName := "partitionlease"
+
+	// Get the configuration settings from App Configuration
+	config.InitializeConfig()
+	eventHubName, err := config.GetVar("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
+	if err != nil {
+		log.Println("Consumervnext::Error getting configuration setting EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING", err)
+		handleError("Consumervnext::Error getting configuration setting EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING", err)
+		panic(err)
+	}
 
 	log.Println("Consumervnext::EventHubName::", eventHubName)
 	log.Println("Consumervnext::EventHubName::", eventHubName)

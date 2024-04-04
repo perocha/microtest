@@ -31,3 +31,8 @@ spec:
             secretKeyRef:
               name: checkpointstore
               key: checkpointstoreconnectionstring
+        - name: APPCONFIGURATION_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: appconfiguration
+              key: appconfigurationconnectionstring
