@@ -45,7 +45,10 @@ func GetVar(key string) (string, error) {
 	// Get the setting value from App Configuration
 	resp, err := client.GetSetting(context.TODO(), key, nil)
 	if err != nil {
+		log.Printf("Error: Failed to get configuration setting %s\n", key)
+		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Failed to get configuration setting"})
 		return "", err
 	}
+
 	return *resp.Value, nil
 }

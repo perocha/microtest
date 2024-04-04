@@ -27,27 +27,10 @@ func main() {
 
 	// Get the configuration settings from App Configuration
 	config.InitializeConfig()
-	eventHubName, err := config.GetVar("EVENTHUB_NAME")
-	if err != nil {
-		handleError("Consumervnext::Error getting configuration setting EVENTHUB_NAME", err)
-		panic(err)
-	}
-	eventHubConnectionString, err := config.GetVar("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
-	if err != nil {
-		handleError("Consumervnext::Error getting configuration setting EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING", err)
-		panic(err)
-	}
-	containerName, err := config.GetVar("CHECKPOINTSTORE_CONTAINER_NAME")
-	if err != nil {
-		handleError("Consumervnext::Error getting configuration setting CHECKPOINTSTORE_CONTAINER_NAME", err)
-		panic(err)
-	}
-	checkpointStoreConnectionString, err := config.GetVar("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
-	if err != nil {
-		handleError("Consumervnext::Error getting configuration setting CHECKPOINTSTORE_STORAGE_CONNECTION_STRING", err)
-		panic(err)
-	}
-
+	eventHubName, _ := config.GetVar("EVENTHUB_NAME")
+	eventHubConnectionString, _ := config.GetVar("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
+	containerName, _ := config.GetVar("CHECKPOINTSTORE_CONTAINER_NAME")
+	checkpointStoreConnectionString, _ := config.GetVar("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
 	log.Println("Consumervnext::EventHubName::", eventHubName)
 	log.Println("Consumervnext::EventHubConnectionString::", eventHubConnectionString)
 	log.Println("Consumervnext::ContainerName::", containerName)
@@ -55,7 +38,6 @@ func main() {
 
 	// create a container client using a connection string and container name
 	checkClient, err := container.NewClientFromConnectionString(checkpointStoreConnectionString, containerName, nil)
-
 	if err != nil {
 		handleError("Consumervnext::Error creating container client", err)
 		panic(err)
@@ -63,7 +45,6 @@ func main() {
 
 	// create a checkpoint store that will be used by the event hub
 	checkpointStore, err := checkpoints.NewBlobStore(checkClient, nil)
-
 	if err != nil {
 		handleError("Consumervnext::Error creating checkpoint store", err)
 		panic(err)
@@ -71,7 +52,6 @@ func main() {
 
 	// create a consumer client using a connection string to the namespace and the event hub
 	consumerClient, err := azeventhubs.NewConsumerClientFromConnectionString(eventHubConnectionString, eventHubName, azeventhubs.DefaultConsumerGroup, nil)
-
 	if err != nil {
 		handleError("Consumervnext::Error creating consumer client", err)
 		panic(err)
@@ -81,7 +61,6 @@ func main() {
 
 	// Create a processor to receive and process events
 	processor, err := azeventhubs.NewProcessor(consumerClient, checkpointStore, nil)
-
 	if err != nil {
 		handleError("Consumervnext::Error creating processor", err)
 		panic(err)
