@@ -16,21 +16,6 @@ spec:
       - name: consumervnext
         image: perocha.azurecr.io/consumervnext:latest
         env:
-        - name: APPINSIGHTS_INSTRUMENTATIONKEY
-          valueFrom:
-            secretKeyRef:
-              name: appinsights
-              key: instrumentationkey
-        - name: EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING
-          valueFrom:
-            secretKeyRef:
-              name: eventhubconsumervnext
-              key: eventhubconsumervnextconnectionstring
-        - name: CHECKPOINTSTORE_STORAGE_CONNECTION_STRING
-          valueFrom:
-            secretKeyRef:
-              name: checkpointstore
-              key: checkpointstoreconnectionstring
         - name: APPCONFIGURATION_CONNECTION_STRING
           valueFrom:
             secretKeyRef:
