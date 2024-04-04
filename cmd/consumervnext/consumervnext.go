@@ -35,14 +35,13 @@ func main() {
 
 	// Get the configuration settings from App Configuration
 	config.InitializeConfig()
-	eventHubName, err := config.GetVar("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
+	eventHubConnectionString, err := config.GetVar("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
 	if err != nil {
 		log.Println("Consumervnext::Error getting configuration setting EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING", err)
 		handleError("Consumervnext::Error getting configuration setting EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING", err)
 		panic(err)
 	}
 
-	log.Println("Consumervnext::EventHubName::", eventHubName)
 	log.Println("Consumervnext::EventHubName::", eventHubName)
 	log.Println("Consumervnext::ContainerName::", containerName)
 	log.Println("Consumervnext::EventHubConnectionString::", eventHubConnectionString)
