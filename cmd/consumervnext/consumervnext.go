@@ -23,10 +23,18 @@ const (
 
 func main() {
 	// Initialize telemetry
-	telemetry.InitTelemetry(SERVICE_NAME)
+	err := telemetry.InitTelemetry(SERVICE_NAME)
+	if err != nil {
+		log.Println("Consumervnext::Error initializing telemetry", err)
+		panic(err)
+	}
 
 	// Get the configuration settings from App Configuration
-	config.InitializeConfig()
+	err = config.InitializeConfig()
+	if err != nil {
+		log.Println("Consumervnext::Error initializing config", err)
+		panic(err)
+	}
 	eventHubName, _ := config.GetVar("EVENTHUB_NAME")
 	eventHubConnectionString, _ := config.GetVar("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
 	containerName, _ := config.GetVar("CHECKPOINTSTORE_CONTAINER_NAME")

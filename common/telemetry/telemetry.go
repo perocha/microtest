@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 	"time"
@@ -26,13 +27,13 @@ const (
 )
 
 // InitTelemetry initializes App Insights
-func InitTelemetry(serviceName string) {
+func InitTelemetry(serviceName string) error {
 	// Get the instrumentation key from environment variables
 	instrumentationKey := os.Getenv("APPINSIGHTS_INSTRUMENTATIONKEY")
 
 	if instrumentationKey == "" {
-		log.Println("APPINSIGHTS_INSTRUMENTATIONKEY is not set, logging to console instead of App Insights")
-		return
+		err := errors.New("app insights instrumentation key not initialized")
+		return err
 	}
 
 	// Create the client
@@ -43,6 +44,8 @@ func InitTelemetry(serviceName string) {
 
 	// Send a trace message to make sure it's working
 	client.TrackTrace(serviceName+"::Telemetry::App Insights initialized", contracts.Information)
+
+	return nil
 }
 
 // TrackException sends an exception to App Insights
@@ -146,6 +149,12 @@ func TrackDependency(
 	// Create more descriptive information to trace, with the caller name and the dependency data
 	dependencyText := dependencyName + "::" + dependencyData
 
+	if client == nil {
+		log.Printf("Dependency: %s, Name: %s, Type: %s, Target: %s, Success: %t\n", dependencyData, dependencyName, dependencyType, dependencyTarget, dependencySuccess)
+		return ""
+	}
+
+	// Create a new dependency
 	dependency := appinsights.NewRemoteDependencyTelemetry(dependencyText, dependencyType, dependencyTarget, dependencySuccess)
 
 	dependency.Data = dependencyData
@@ -179,6 +188,12 @@ func TrackDependencyCtx(
 	// Create more descriptive information to trace, with the caller name and the dependency data
 	dependencyText := dependencyName + "::" + dependencyData
 
+	if client == nil {
+		log.Printf("Dependency: %s, Name: %s, Type: %s, Target: %s, Success: %t\n", dependencyData, dependencyName, dependencyType, dependencyTarget, dependencySuccess)
+		return ""
+	}
+
+	// Create a new dependency
 	dependency := appinsights.NewRemoteDependencyTelemetry(dependencyText, dependencyType, dependencyTarget, dependencySuccess)
 
 	dependency.Data = dependencyData
