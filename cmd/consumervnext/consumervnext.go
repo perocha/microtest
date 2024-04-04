@@ -22,27 +22,29 @@ const (
 )
 
 func main() {
-	// Initialize telemetry
-	err := telemetry.InitTelemetry(SERVICE_NAME)
-	if err != nil {
-		log.Println("Consumervnext::Error initializing telemetry", err)
-		panic(err)
-	}
-
 	// Get the configuration settings from App Configuration
-	err = config.InitializeConfig()
+	err := config.InitializeConfig()
 	if err != nil {
 		log.Println("Consumervnext::Error initializing config", err)
 		panic(err)
 	}
+	appinsights_instrumentationkey, _ := config.GetVar("APPINSIGHTS_INSTRUMENTATIONKEY")
 	eventHubName, _ := config.GetVar("EVENTHUB_NAME")
 	eventHubConnectionString, _ := config.GetVar("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
 	containerName, _ := config.GetVar("CHECKPOINTSTORE_CONTAINER_NAME")
 	checkpointStoreConnectionString, _ := config.GetVar("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
+	log.Println("Consumervnext::AppInsightsInstrumentationKey::", appinsights_instrumentationkey)
 	log.Println("Consumervnext::EventHubName::", eventHubName)
 	log.Println("Consumervnext::EventHubConnectionString::", eventHubConnectionString)
 	log.Println("Consumervnext::ContainerName::", containerName)
 	log.Println("Consumervnext::CheckpointStoreConnectionString::", checkpointStoreConnectionString)
+
+	// Initialize telemetry
+	err = telemetry.InitTelemetryKey(SERVICE_NAME, appinsights_instrumentationkey)
+	if err != nil {
+		log.Println("Consumervnext::Error initializing telemetry", err)
+		panic(err)
+	}
 
 	// create a container client using a connection string and container name
 	checkClient, err := container.NewClientFromConnectionString(checkpointStoreConnectionString, containerName, nil)

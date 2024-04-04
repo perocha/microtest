@@ -48,6 +48,26 @@ func InitTelemetry(serviceName string) error {
 	return nil
 }
 
+// InitTelemetry initializes App Insights
+func InitTelemetryKey(serviceName string, instrumentationKey string) error {
+	// Get the instrumentation key from environment variables
+	if instrumentationKey == "" {
+		err := errors.New("app insights instrumentation key not initialized")
+		return err
+	}
+
+	// Create the client
+	client = appinsights.NewTelemetryClient(instrumentationKey)
+
+	// Set the role name
+	client.Context().Tags.Cloud().SetRole(serviceName)
+
+	// Send a trace message to make sure it's working
+	client.TrackTrace(serviceName+"::Telemetry::App Insights initialized", contracts.Information)
+
+	return nil
+}
+
 // TrackException sends an exception to App Insights
 func TrackException(err error, Severity contracts.SeverityLevel, Properties map[string]string) {
 	if client == nil {
