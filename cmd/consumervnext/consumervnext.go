@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"log"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -26,25 +25,32 @@ func main() {
 	// Initialize telemetry
 	telemetry.InitTelemetry(SERVICE_NAME)
 
-	// Get the connection strings from environment variables
-	eventHubConnectionString := os.Getenv("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
-	checkpointStoreConnectionString := os.Getenv("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
-	//	eventHubName := os.Getenv("EVENTHUB_NAME")
-	eventHubName := "microtest-eventhub2"
-	containerName := "partitionlease"
-
 	// Get the configuration settings from App Configuration
 	config.InitializeConfig()
+	eventHubName, err := config.GetVar("EVENTHUB_NAME")
+	if err != nil {
+		handleError("Consumervnext::Error getting configuration setting EVENTHUB_NAME", err)
+		panic(err)
+	}
 	eventHubConnectionString, err := config.GetVar("EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING")
 	if err != nil {
-		log.Println("Consumervnext::Error getting configuration setting EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING", err)
 		handleError("Consumervnext::Error getting configuration setting EVENTHUB_CONSUMERVNEXT_CONNECTION_STRING", err)
+		panic(err)
+	}
+	containerName, err := config.GetVar("CHECKPOINTSTORE_CONTAINER_NAME")
+	if err != nil {
+		handleError("Consumervnext::Error getting configuration setting CHECKPOINTSTORE_CONTAINER_NAME", err)
+		panic(err)
+	}
+	checkpointStoreConnectionString, err := config.GetVar("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
+	if err != nil {
+		handleError("Consumervnext::Error getting configuration setting CHECKPOINTSTORE_STORAGE_CONNECTION_STRING", err)
 		panic(err)
 	}
 
 	log.Println("Consumervnext::EventHubName::", eventHubName)
-	log.Println("Consumervnext::ContainerName::", containerName)
 	log.Println("Consumervnext::EventHubConnectionString::", eventHubConnectionString)
+	log.Println("Consumervnext::ContainerName::", containerName)
 	log.Println("Consumervnext::CheckpointStoreConnectionString::", checkpointStoreConnectionString)
 
 	// create a container client using a connection string and container name
