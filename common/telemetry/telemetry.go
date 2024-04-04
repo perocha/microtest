@@ -58,6 +58,10 @@ func InitTelemetryKey(serviceName string, instrumentationKey string) error {
 
 	// Create the client
 	client = appinsights.NewTelemetryClient(instrumentationKey)
+	if client == nil {
+		err := errors.New("app insights client not initialized")
+		return err
+	}
 
 	// Set the role name
 	client.Context().Tags.Cloud().SetRole(serviceName)
