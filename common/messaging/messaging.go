@@ -129,7 +129,6 @@ func (pc *ProducerClient) PublishMessage(ctx context.Context, serviceName string
 	}
 
 	// Send the batch
-	log.Printf("Publish::Sending message\n")
 	err = pc.innerClient.SendEventDataBatch(context.TODO(), batch, nil)
 
 	if err != nil {
@@ -138,7 +137,7 @@ func (pc *ProducerClient) PublishMessage(ctx context.Context, serviceName string
 		panic(err)
 	}
 
-	log.Printf("Publish::Successfully sent message\n")
+	log.Printf("Publish::Successfully sent message with size: %d\n", len(jsonData))
 	telemetry.TrackDependencyCtx(ctx, "PublishBatch::Successfully sent batch", serviceName, "EventHub", eventHubName, true, startTime, time.Now(), nil)
 	return nil
 }
