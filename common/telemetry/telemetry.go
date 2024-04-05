@@ -59,6 +59,7 @@ func InitTelemetryKey(serviceName string, instrumentationKey string) error {
 	// Create the client
 	client = appinsights.NewTelemetryClient(instrumentationKey)
 	if client == nil {
+		// TO DO: This is not working properly
 		err := errors.New("app insights client not initialized")
 		return err
 	}

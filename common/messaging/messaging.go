@@ -3,21 +3,18 @@ package messaging
 import (
 	"context"
 	"encoding/json"
-	"strconv"
-	"strings"
+	"errors"
+	"log"
 	"time"
 
-	eventhub "github.com/Azure/azure-event-hubs-go/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs"
 	"github.com/microtest/common/telemetry"
 )
 
 // EventHubInstance is a global instance of the EventHub
-var EventHubInstance *EventHub
-
-// EventHub represents the structure of an EventHub
-type EventHub struct {
-	Hub          *eventhub.Hub
-	EventHubName string
+// var producerClient *azeventhubs.ProducerClient
+type ProducerClient struct {
+	innerClient *azeventhubs.ProducerClient
 }
 
 // Message represents the structure of a message
@@ -26,107 +23,95 @@ type Message struct {
 	MessageId string `json:"messageId"`
 }
 
-// Function to get the EventHub name from the connection string
-func getEventHubName(connectionString string) string {
-	// Connection string format: Endpoint=sb://<NAMESPACE>.servicebus.windows.net/;SharedAccessKeyName=<KEYNAME
-	// ;SharedAccessKey=<KEY>;EntityPath=<EVENTHUBNAME>
-	// Split the connection string by ;
-	parts := strings.Split(connectionString, ";")
-	for _, part := range parts {
-		if strings.HasPrefix(part, "EntityPath=") {
-			return strings.Split(part, "=")[1]
-		}
-	}
-	return ""
-}
-
 // NewEventHub initializes a new EventHub instance
-func NewEventHub(serviceName string, connectionString string) error {
+func Initialize(serviceName, connectionString, eventHubName string) (*ProducerClient, error) {
 	startTime := time.Now()
 
 	// Create a new EventHub instance
-	hub, err := eventhub.NewHubFromConnectionString(connectionString)
+	innerClient, err := azeventhubs.NewProducerClientFromConnectionString(connectionString, eventHubName, nil)
 	if err != nil {
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Error": err.Error(), "Message": "Failed to create new event hub instance"})
-		return err
+		return nil, err
 	}
-	EventHubInstance = &EventHub{Hub: hub, EventHubName: getEventHubName(connectionString)}
 
 	// Log the dependency to App Insights (success)
-	telemetry.TrackDependency("New event hub initialized", serviceName, "EventHub", EventHubInstance.EventHubName, true, startTime, time.Now(), nil, "")
+	telemetry.TrackDependency("New event hub initialized", serviceName, "EventHub", eventHubName, true, startTime, time.Now(), nil, "")
 
-	return nil
+	return &ProducerClient{
+		innerClient: innerClient,
+	}, nil
 }
 
-// Publish sends a message to the EventHub
-func (e *EventHub) Publish(ctx context.Context, serviceName string, operationID string, msg Message) error {
+// PublishBatch sends a batch of messages to the EventHub
+func (pc *ProducerClient) Publish(ctx context.Context, serviceName string, operationID string, msg Message) error {
 	startTime := time.Now()
 
-	// Create a new context for the message
-	//	ctx := context.Background()
+	// Check if the EventHub instance is initialized, if not return an error
+	if pc == nil {
+		err := errors.New("eventHub instance not initialized")
+		telemetry.TrackException(err, telemetry.Error, map[string]string{"Message": "PublishBatch::Failed to initialize EventHub instance", "Error": err.Error()})
+		return err
+	}
+
+	// Get the EventHub properties
+	eventHubProps, err := pc.innerClient.GetEventHubProperties(context.TODO(), nil)
+	if err != nil {
+		telemetry.TrackException(err, telemetry.Error, map[string]string{"Message": "PublishBatch::Failed to get EventHub properties", "Error": err.Error()})
+		return err
+	}
+	eventHubName := eventHubProps.Name
+	log.Printf("Publish::EventHubName: %s\n", eventHubName)
+	for _, partitionID := range eventHubProps.PartitionIDs {
+		log.Printf("Publish::PartitionID: %s\n", partitionID)
+	}
+
+	// Create a new batch
+	batch, err := pc.innerClient.NewEventDataBatch(context.TODO(), nil)
+	if err != nil {
+		panic(err)
+	}
 
 	// Convert the message to JSON
 	jsonData, err := json.Marshal(msg)
 	if err != nil {
 		// Failed to marshal message, log dependency failure to App Insights
-		telemetry.TrackDependency("Publish::Failed to marshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()}, operationID)
+		log.Printf("Publish::Failed to marshal message: %s\n", err.Error())
+		telemetry.TrackDependency("Publish::Failed to marshal message", serviceName, "EventHub", eventHubName, false, startTime, time.Now(), map[string]string{"Error": err.Error()}, operationID)
 		return err
 	}
 
-	// Create a new EventHub event
-	event := eventhub.NewEventFromString(string(jsonData))
+	// can be called multiple times with new messages until you
+	// receive an azeventhubs.ErrMessageTooLarge
+	err = batch.AddEventData(&azeventhubs.EventData{
+		Body: []byte(jsonData),
+	}, nil)
 
-	// Send the message to the EventHub
-	errHub := e.Hub.Send(ctx, event)
-
-	if errHub != nil {
-		// Failed to send message, log dependency failure to App Insights
-		telemetry.TrackDependency("Publish::Failed to send message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"Error": errHub.Error(), "messageId": msg.MessageId}, operationID)
-	} else {
-		// Successfully sent message, log to App Insights
-		telemetry.TrackDependencyCtx(ctx, "Publish::Successfully sent message", serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"messageId": msg.MessageId})
+	if errors.Is(err, azeventhubs.ErrEventDataTooLarge) {
+		// Message too large to fit into this batch.
+		//
+		// At this point you'd usually just send the batch (using ProducerClient.SendEventDataBatch),
+		// create a new one, and start filling up the batch again.
+		//
+		// If this is the _only_ message being added to the batch then it's too big in general, and
+		// will need to be split or shrunk to fit.
+		log.Printf("Publish::Message too large to fit into this batch\n")
+		panic(err)
+	} else if err != nil {
+		// Some other error occurred
+		log.Printf("Publish::Failed to add message to batch: %s\n", err.Error())
+		panic(err)
 	}
 
-	return errHub
-}
-
-// ListenForMessages starts listening for messages on the provided hub and partition
-func (e *EventHub) ListenForMessages(serviceName string, partitionID string, messages chan<- Message) error {
-	startTime := time.Now()
-
-	// Create a new context for the message and receive it
-	ctx := context.Background()
-
-	// Start receiving messages from the specified partition
-	_, err := e.Hub.Receive(ctx, partitionID, func(ctx context.Context, event *eventhub.Event) error {
-		// Unmarshal the JSON message received
-		var msg Message
-		err := json.Unmarshal(event.Data, &msg)
-		if err != nil {
-			// Log the error using telemetry.TrackDependency
-			telemetry.TrackDependency("Failed to unmarshal message", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()}, "")
-			return err
-		}
-
-		// Send the message to the consumer
-		for {
-			select {
-			case messages <- msg:
-				// Successfully received message, log to App Insights
-				telemetry.TrackDependency("Successfully received message id "+msg.MessageId+" from event hub from partition id "+partitionID, serviceName, "EventHub", e.EventHubName, true, startTime, time.Now(), map[string]string{"partitionId": partitionID, "content": msg.Payload, "messageId": msg.MessageId, "msg": string(event.Data), "size": strconv.Itoa(len(event.Data))}, "")
-				// Message successfully sent, break the loop
-				return nil
-			default:
-				// If the messages channel is full, wait and retry
-				time.Sleep(100 * time.Millisecond) // Adjust the sleep duration as needed
-			}
-		}
-	})
+	// Send the batch
+	log.Printf("Publish::Sending batch\n")
+	err = pc.innerClient.SendEventDataBatch(context.TODO(), batch, nil)
 
 	if err != nil {
-		// Log the error using telemetry.TrackDependency
-		telemetry.TrackDependency("Error receiving message from partition", serviceName, "EventHub", e.EventHubName, false, startTime, time.Now(), map[string]string{"partitionId": partitionID, "Error": err.Error()}, "")
+		log.Printf("Publish::Failed to send batch: %s\n", err.Error())
+		panic(err)
 	}
 
-	return err
+	log.Printf("Publish::Successfully sent batch\n")
+	telemetry.TrackDependencyCtx(ctx, "PublishBatch::Successfully sent batch", serviceName, "EventHub", eventHubName, true, startTime, time.Now(), nil)
+	return nil
 }

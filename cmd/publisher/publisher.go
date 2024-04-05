@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -11,23 +12,77 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
+	"github.com/microtest/common/config"
 	"github.com/microtest/common/messaging"
 	"github.com/microtest/common/shared"
 	"github.com/microtest/common/telemetry"
 )
 
+const (
+	SERVICE_NAME = "Publisher"
+)
+
+// Messaging client to publish messages to the event hub
+var producer *messaging.ProducerClient
+
 func main() {
+	err := InitializeApp()
+	if err != nil {
+		log.Println("Publisher::Error initializing app", err)
+		panic(err)
+	}
+
+	// Start the HTTP server
+	startHTTPServer()
+
+	// Graceful shutdown
+	// defer func() {
+	// 	// Close the EventHub client
+	// 	err := producer.Close()
+}
+
+func InitializeApp() error {
+	// Get the configuration settings from App Configuration
+	err := config.InitializeConfig()
+	if err != nil {
+		log.Println("Consumervnext::Error initializing config", err)
+		panic(err)
+	}
+	appinsights_instrumentationkey, _ := config.GetVar("APPINSIGHTS_INSTRUMENTATIONKEY")
+	eventHubName, _ := config.GetVar("EVENTHUB_NAME")
+	eventHubConnectionString, _ := config.GetVar("EVENTHUB_PUBLISHER_CONNECTION_STRING")
+	containerName, _ := config.GetVar("CHECKPOINTSTORE_CONTAINER_NAME")
+	checkpointStoreConnectionString, _ := config.GetVar("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
+	log.Println("Publisher::AppInsightsInstrumentationKey::", appinsights_instrumentationkey)
+	log.Println("Publisher::EventHubName::", eventHubName)
+	log.Println("Publisher::EventHubConnectionString::", eventHubConnectionString)
+	log.Println("Publisher::ContainerName::", containerName)
+	log.Println("Publisher::CheckpointStoreConnectionString::", checkpointStoreConnectionString)
+
 	// Initialize telemetry
-	telemetry.InitTelemetry("Publisher")
+	err = telemetry.InitTelemetryKey(SERVICE_NAME, appinsights_instrumentationkey)
+	if err != nil {
+		log.Println("Consumervnext::Error initializing telemetry", err)
+		panic(err)
+	}
 
 	// Initialize a new EventHub instance
-	eventHubConnectionString := os.Getenv("EVENTHUB_PUBLISHER_CONNECTION_STRING")
-	err := messaging.NewEventHub("Publisher", eventHubConnectionString)
+	producerInstance, err := messaging.Initialize(SERVICE_NAME, eventHubConnectionString, eventHubName)
 	if err != nil {
 		// Failed to initialize EventHub, log the error to App Insights
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Message": "Publisher::Failed to initialize EventHub", "Error": err.Error()})
+		panic(err)
 	}
 
+	// Set the global producer instance
+	telemetry.TrackTrace("Publisher::Initialization complete", telemetry.Information, map[string]string{"EventHubName": eventHubName}, "")
+	producer = producerInstance
+
+	return nil
+}
+
+// Initialize HTTP server and routes
+func startHTTPServer() {
 	// Create a new router
 	router := mux.NewRouter()
 
@@ -50,7 +105,12 @@ func main() {
 	telemetry.TrackTrace("Publisher::ServerStarted on port "+port, telemetry.Information, map[string]string{"port": port}, "")
 
 	// Start the server
-	telemetry.TrackException(server.ListenAndServe(), telemetry.Error, nil)
+	err := server.ListenAndServe()
+	if err != nil {
+		// Failed to start server, log the error to App Insights
+		telemetry.TrackException(err, telemetry.Error, map[string]string{"Message": "Publisher::Failed to start server", "Error": err.Error()})
+		panic(err)
+	}
 }
 
 // Publishes messages to the event hub
@@ -86,7 +146,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Publish the message to event hub
-		err = messaging.EventHubInstance.Publish(ctx, "Publisher", operationID, msg)
+		err := producer.Publish(ctx, SERVICE_NAME, operationID, msg)
 
 		if err != nil {
 			// Failed to publish message, log the error to App Insights

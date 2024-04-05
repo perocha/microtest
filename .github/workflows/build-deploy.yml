@@ -23,14 +23,6 @@ jobs:
         username: ${{secrets.ACR_USERNAME}}
         password: ${{secrets.ACR_PASSWORD}}
 
-    - name: Build consumer image
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        file: ./cmd/consumer/Dockerfile
-        push: true
-        tags: ${{secrets.ACR_NAMESPACE}}.azurecr.io/consumer:latest
-
     - name: Build consumervnext image
       uses: docker/build-push-action@v2
       with:
@@ -73,6 +65,5 @@ jobs:
       with:
         manifests: |
           k8s/publisher-deployment.yaml
-          k8s/consumer-deployment.yaml
           k8s/publisher-service.yaml
           k8s/consumervnext-deployment.yaml
