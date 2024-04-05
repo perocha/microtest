@@ -21,6 +21,7 @@ COPY ./cmd/publisher .
 COPY ./common/messaging ./common/messaging
 COPY ./common/telemetry ./common/telemetry
 COPY ./common/shared ./common/shared
+COPY ./common/config ./common/config
 
 # Build the Go app
 RUN go build -o publisher .
