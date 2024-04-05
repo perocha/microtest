@@ -26,7 +26,7 @@ const (
 var producer *messaging.ProducerClient
 
 func main() {
-	err := InitializeApp()
+	err := initializeApp()
 	if err != nil {
 		log.Println("Publisher::Error initializing app", err)
 		panic(err)
@@ -41,7 +41,7 @@ func main() {
 	// 	err := producer.Close()
 }
 
-func InitializeApp() error {
+func initializeApp() error {
 	// Get the configuration settings from App Configuration
 	err := config.InitializeConfig()
 	if err != nil {
@@ -51,13 +51,9 @@ func InitializeApp() error {
 	appinsights_instrumentationkey, _ := config.GetVar("APPINSIGHTS_INSTRUMENTATIONKEY")
 	eventHubName, _ := config.GetVar("EVENTHUB_NAME")
 	eventHubConnectionString, _ := config.GetVar("EVENTHUB_PUBLISHER_CONNECTION_STRING")
-	containerName, _ := config.GetVar("CHECKPOINTSTORE_CONTAINER_NAME")
-	checkpointStoreConnectionString, _ := config.GetVar("CHECKPOINTSTORE_STORAGE_CONNECTION_STRING")
 	log.Println("Publisher::AppInsightsInstrumentationKey::", appinsights_instrumentationkey)
 	log.Println("Publisher::EventHubName::", eventHubName)
 	log.Println("Publisher::EventHubConnectionString::", eventHubConnectionString)
-	log.Println("Publisher::ContainerName::", containerName)
-	log.Println("Publisher::CheckpointStoreConnectionString::", checkpointStoreConnectionString)
 
 	// Initialize telemetry
 	err = telemetry.InitTelemetryKey(SERVICE_NAME, appinsights_instrumentationkey)
@@ -67,7 +63,7 @@ func InitializeApp() error {
 	}
 
 	// Initialize a new EventHub instance
-	producerInstance, err := messaging.Initialize(SERVICE_NAME, eventHubConnectionString, eventHubName)
+	producerInstance, err := messaging.ProducerInit(SERVICE_NAME, eventHubConnectionString, eventHubName)
 	if err != nil {
 		// Failed to initialize EventHub, log the error to App Insights
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Message": "Publisher::Failed to initialize EventHub", "Error": err.Error()})
@@ -146,7 +142,7 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Publish the message to event hub
-		err := producer.Publish(ctx, SERVICE_NAME, operationID, msg)
+		err := producer.PublishMessage(ctx, SERVICE_NAME, operationID, msg)
 
 		if err != nil {
 			// Failed to publish message, log the error to App Insights

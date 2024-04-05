@@ -22,6 +22,10 @@ const (
 )
 
 func main() {
+	OldMain()
+}
+
+func OldMain() {
 	// Get the configuration settings from App Configuration
 	err := config.InitializeConfig()
 	if err != nil {
