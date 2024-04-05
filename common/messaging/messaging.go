@@ -19,8 +19,8 @@ type ProducerClient struct {
 }
 
 // EventHub consumer client
-type ConsumerClient struct {
-	innerClient *azeventhubs.ConsumerClient
+type Processor struct {
+	innerClient *azeventhubs.Processor
 }
 
 // Message represents the structure of a message
@@ -143,7 +143,7 @@ func (pc *ProducerClient) PublishMessage(ctx context.Context, serviceName string
 }
 
 // Consumer initialization
-func ConsumerInit(serviceName, eventHubConnectionString, eventHubName, containerName, checkpointStoreConnectionString string) (*azeventhubs.Processor, error) {
+func ProcessorInit(serviceName, eventHubConnectionString, eventHubName, containerName, checkpointStoreConnectionString string) (*Processor, error) {
 	startTime := time.Now()
 
 	// Create a container client using a connection string and container name
@@ -170,7 +170,7 @@ func ConsumerInit(serviceName, eventHubConnectionString, eventHubName, container
 	defer consumerClient.Close(context.TODO())
 
 	// Create a processor to receive and process events
-	processor, err := azeventhubs.NewProcessor(consumerClient, checkpointStore, nil)
+	innerClient, err := azeventhubs.NewProcessor(consumerClient, checkpointStore, nil)
 	if err != nil {
 		telemetry.TrackException(err, telemetry.Error, map[string]string{"Client": serviceName, "Error": err.Error(), "Message": "Error creating processor"})
 		panic(err)
@@ -179,5 +179,7 @@ func ConsumerInit(serviceName, eventHubConnectionString, eventHubName, container
 	// Log the dependency to App Insights (success)
 	telemetry.TrackDependency("New event hub consumer initialized", serviceName, "EventHub", eventHubName, true, startTime, time.Now(), nil, "")
 
-	return processor, nil
+	return &Processor{
+		innerClient: innerClient,
+	}, nil
 }

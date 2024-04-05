@@ -6,15 +6,14 @@ import (
 	"log"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs"
+	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs/checkpoints"
+	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
 	"github.com/google/uuid"
 
 	"github.com/microtest/common/config"
 	"github.com/microtest/common/shared"
 	"github.com/microtest/common/telemetry"
-
-	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs"
-	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azeventhubs/checkpoints"
-	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/container"
 )
 
 const (
@@ -22,10 +21,6 @@ const (
 )
 
 func main() {
-	OldMain()
-}
-
-func OldMain() {
 	// Get the configuration settings from App Configuration
 	err := config.InitializeConfig()
 	if err != nil {
