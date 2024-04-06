@@ -15,6 +15,7 @@ spec:
       containers:
       - name: consumervnext
         image: perocha.azurecr.io/consumervnext:latest
+        restartPolicy: Never
         env:
         - name: APPCONFIGURATION_CONNECTION_STRING
           valueFrom:
