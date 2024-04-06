@@ -114,13 +114,9 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 	// Start time for tracking duration
 	startTime := time.Now()
 
-	// Parse request body
-	type Message struct {
-		Content string `json:"content"`
-		Count   int    `json:"count"`
-	}
-	var message Message
-	err := json.NewDecoder(r.Body).Decode(&message)
+	// Parse request body into the Event struct
+	var event messaging.Event
+	err := json.NewDecoder(r.Body).Decode(&event)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -130,24 +126,18 @@ func publishMessages(w http.ResponseWriter, r *http.Request) {
 	operationID := telemetry.TrackRequest(r.URL.Path, r.URL.String(), time.Since(startTime), strconv.Itoa(http.StatusOK), true, r.RemoteAddr, nil)
 	ctx := context.WithValue(context.Background(), shared.OperationIDKeyContextKey, operationID)
 
-	// Publish X number of messages, based on the count received in the POST request
-	for i := 0; i < message.Count; i++ {
-		// Create a unique UUID for each message sent to event hub
-		messageID := uuid.New().String()
+	// Generate a unique UUID for the event
+	event.EventID = uuid.New().String()
 
-		// Create a new message to be sent to the event hub (with payload received in POST and the unique message id)
-		msg := messaging.Message{
-			Payload:   message.Content,
-			MessageId: messageID,
-		}
+	// Add the current timestamp to the event
+	event.Timestamp = time.Now()
 
-		// Publish the message to event hub
-		err := producer.PublishMessage(ctx, SERVICE_NAME, operationID, msg)
+	// Publish the message to event hub
+	err = producer.PublishMessage(ctx, SERVICE_NAME, operationID, event)
 
-		if err != nil {
-			// Failed to publish message, log the error to App Insights
-			telemetry.TrackTraceCtx(ctx, "Publisher::Failed to publish message: "+messageID+")", telemetry.Error, map[string]string{"Error": err.Error()})
-		}
+	if err != nil {
+		// Failed to publish message, log the error to App Insights
+		telemetry.TrackTraceCtx(ctx, "Publisher::Failed to publish message: "+event.EventID+")", telemetry.Error, map[string]string{"Error": err.Error()})
 	}
 
 	// Send HTTP response with status code 200 (OK)

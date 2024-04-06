@@ -13,6 +13,12 @@ import (
 	"github.com/microtest/common/telemetry"
 )
 
+type Event struct {
+	Type      string
+	EventID   string
+	Timestamp time.Time
+}
+
 // EventHub producer client
 type ProducerClient struct {
 	innerClient *azeventhubs.ProducerClient
@@ -73,7 +79,7 @@ func (pc *ProducerClient) ProducerClose() error {
 }
 
 // Sends a message to the EventHub
-func (pc *ProducerClient) PublishMessage(ctx context.Context, serviceName string, operationID string, msg Message) error {
+func (pc *ProducerClient) PublishMessage(ctx context.Context, serviceName string, operationID string, event Event) error {
 	startTime := time.Now()
 
 	// Check if the EventHub instance is initialized, if not return an error
@@ -98,7 +104,7 @@ func (pc *ProducerClient) PublishMessage(ctx context.Context, serviceName string
 	}
 
 	// Convert the message to JSON
-	jsonData, err := json.Marshal(msg)
+	jsonData, err := json.Marshal(event)
 	if err != nil {
 		// Failed to marshal message, log dependency failure to App Insights
 		log.Printf("Publish::Failed to marshal message: %s\n", err.Error())

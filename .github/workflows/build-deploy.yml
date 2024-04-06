@@ -66,4 +66,3 @@ jobs:
         manifests: |
           k8s/publisher-deployment.yaml
           k8s/publisher-service.yaml
-          k8s/consumervnext-deployment.yaml
