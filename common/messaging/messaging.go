@@ -13,10 +13,19 @@ import (
 	"github.com/microtest/common/telemetry"
 )
 
+type Order struct {
+	Id              string
+	ProductCategory string
+	ProductID       string
+	CustomerID      string
+	Status          string
+}
+
 type Event struct {
-	Type      string
-	EventID   string
-	Timestamp time.Time
+	Type         string
+	EventID      string
+	Timestamp    time.Time
+	OrderPayload Order
 }
 
 // EventHub producer client
@@ -143,7 +152,7 @@ func (pc *ProducerClient) PublishMessage(ctx context.Context, serviceName string
 		panic(err)
 	}
 
-	log.Printf("Publish::Successfully sent message with size: %d\n", len(jsonData))
+	log.Printf("Publish::Successfully sent message with size=%d::content=%s\n", len(jsonData), jsonData)
 	telemetry.TrackDependencyCtx(ctx, "PublishBatch::Successfully sent batch", serviceName, "EventHub", eventHubName, true, startTime, time.Now(), nil)
 	return nil
 }
